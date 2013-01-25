@@ -1,9 +1,8 @@
-
 Rospy_message_converter is a lightweight ROS package and Python library to
 convert from Python dictionaries and JSON messages to
 [rospy](http://www.ros.org/wiki/rospy) messages, and vice versa.
 
-# Usage
+## Usage
 
 Convert a dictionary to a ROS message
 
