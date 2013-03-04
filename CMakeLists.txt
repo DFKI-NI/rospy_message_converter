@@ -15,10 +15,10 @@ catkin_python_setup()
 # Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
+  std_msgs
 )
 
-catkin_package()
+catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
 
 # Test launch files
 add_rostest(test/test_all.test)

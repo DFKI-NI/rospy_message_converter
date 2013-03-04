@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>rospy_message_converter</name>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <description>Converts between Python dictionaries and JSON to rospy messages.</description>
   <maintainer email="baalexander@gmail.com">Brandon Alexander</maintainer>
   <license>BSD</license>
@@ -9,7 +9,15 @@
   <author email="baalexander@gmail.com">Brandon Alexander</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <run_depend>message_generation</run_depend>
+
+  <build_depend>roslib</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+
   <run_depend>roslib</run_depend>
   <run_depend>rospy</run_depend>
+  <run_depend>message_generation</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
 </package>
