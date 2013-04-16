@@ -62,6 +62,14 @@ ros_binary_types = ['uint8[]', 'char[]']
 list_brackets = re.compile(r'\[[^\]]*\]')
 
 def convert_dictionary_to_ros_message(message_type, dictionary):
+    """
+    Takes in the message type and a Python dictionary and returns a ROS message.
+
+    Example:
+        message_type = "std_msgs/String"
+        dict_message = { "data": "Hello, Robot" }
+        ros_message = convert_dictionary_to_ros_message(message_type, dict_message)
+    """
     message_class = roslib.message.get_message_class(message_type)
     message = message_class()
     message_fields = dict(_get_message_fields(message))
@@ -121,6 +129,13 @@ def _convert_to_ros_array(field_type, list_value):
     return [_convert_to_ros_type(list_type, value) for value in list_value]
 
 def convert_ros_message_to_dictionary(message):
+    """
+    Takes in a ROS message and returns a Python dictionary.
+
+    Example:
+        ros_message = std_msgs.msg.String(data="Hello, Robot")
+        dict_message = convert_ros_message_to_dictionary(ros_message)
+    """
     dictionary = {}
     message_fields = _get_message_fields(message)
     for field_name, field_type in message_fields:
