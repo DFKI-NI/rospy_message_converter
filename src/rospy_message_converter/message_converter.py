@@ -75,9 +75,14 @@ def convert_dictionary_to_ros_message(message_type, dictionary):
     message_fields = dict(_get_message_fields(message))
 
     for field_name, field_value in dictionary.items():
-        field_type = message_fields[field_name]
-        field_value = _convert_to_ros_type(field_type, field_value)
-        setattr(message, field_name, field_value)
+        if field_name in message_fields:
+            field_type = message_fields[field_name]
+            field_value = _convert_to_ros_type(field_type, field_value)
+            setattr(message, field_name, field_value)
+        else:
+            error_message = 'ROS message type "{0}" has no field named "{1}"'\
+                .format(message_type, field_name)
+            raise ValueError(error_message)
 
     return message
 

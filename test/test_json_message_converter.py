@@ -44,6 +44,13 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = json_message_converter.convert_json_to_ros_message('std_msgs/Header', json_str)
         self.assertEqual(message, expected_message)
 
+    def test_json_with_invalid_message_fields(self):
+        self.assertRaises(ValueError,
+                          json_message_converter.convert_json_to_ros_message,
+                          'std_msgs/String',
+                          '{"not_data": "Hello"}')
+
+
 PKG = 'rospy_message_converter'
 NAME = 'test_json_message_converter'
 if __name__ == '__main__':

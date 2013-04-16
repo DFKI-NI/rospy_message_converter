@@ -274,6 +274,23 @@ class TestMessageConverter(unittest.TestCase):
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Header', dictionary)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_header_with_no_prefix(self):
+        from std_msgs.msg import Header
+        rospy.init_node('time_node')
+        now_time = rospy.Time.now()
+        expected_message = Header(
+            stamp = now_time,
+            frame_id = 'my_frame',
+            seq = 12
+        )
+        dictionary = {
+            'stamp': { 'secs': now_time.secs, 'nsecs': now_time.nsecs },
+            'frame_id' : expected_message.frame_id,
+            'seq': expected_message.seq
+        }
+        message = message_converter.convert_dictionary_to_ros_message('Header', dictionary)
+        self.assertEqual(message, expected_message)
+
     def test_dictionary_with_int8(self):
         from std_msgs.msg import Int8
         expected_message = Int8(data = -0x7F)
@@ -382,6 +399,13 @@ class TestMessageConverter(unittest.TestCase):
         }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Float64MultiArray', dictionary)
         self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_invalid_message_fields(self):
+        self.assertRaises(ValueError,
+                          message_converter.convert_dictionary_to_ros_message,
+                          'std_msgs/Empty',
+                          {'invalid_field': 1})
+
 
 
 PKG = 'rospy_message_converter'
