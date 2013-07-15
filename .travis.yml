@@ -20,7 +20,6 @@ install:
 
 script:
   - source /opt/ros/hydro/setup.bash
-  - catkin_make
   - catkin_make install
-  - source install/setup.bash
+  - source devel/setup.bash
   - rostest rospy_message_converter test_all.test
