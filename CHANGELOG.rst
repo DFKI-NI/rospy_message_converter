@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+
 0.2.0 (2013-07-15)
 ------------------
 - Updates to ROS Hydro
