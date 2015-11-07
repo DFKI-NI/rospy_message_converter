@@ -1,27 +1,10 @@
-language:
-  - cpp
-  - python
-python:
-  - "2.7"
-compiler:
-  - gcc
+sudo: required
 
-install:
-  - sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list'
-  - wget http://packages.ros.org/ros.key -O - | sudo apt-key add -
-  - sudo apt-get update -qq
-  - sudo apt-get install python-rosdep -qq
-  - sudo rosdep init
-  - rosdep update
-  - mkdir -p /tmp/ws/src
-  - ln -s `pwd` /tmp/ws/src/rospy_message_converter
-  - cd /tmp/ws
-  - rosdep install --from-paths src --ignore-src --rosdistro hydro -y
+services:
+  - docker
+
+before_install:
+  - docker build -t rospy_message_converter_indigo -f Dockerfile-indigo .
 
 script:
-  - source /opt/ros/hydro/setup.bash
-  - catkin_make install
-  - source devel/setup.bash
-  - export ROS_MASTER_URI=http://localhost:11311
-  - export ROS_HOSTNAME=localhost
-  - rostest rospy_message_converter test_all.test
+  - docker run rospy_message_converter_indigo /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
