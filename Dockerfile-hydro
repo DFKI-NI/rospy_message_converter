@@ -1,0 +1,40 @@
+FROM ubuntu:precise
+
+# Setup environment
+RUN locale-gen en_US.UTF-8
+ENV LANG en_US.UTF-8
+
+# Setup keys
+RUN apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 421C365BD9FF1F717815A3895523BAEEB01FA116
+
+# Setup sources.list
+RUN echo "deb http://packages.ros.org/ros/ubuntu precise main" > /etc/apt/sources.list.d/ros-latest.list
+
+# Install ROS bootstrap tools
+ENV ROS_DISTRO hydro
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    python-rosdep \
+    python-rosinstall \
+    python-vcstools \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Bootstrap rosdep
+RUN rosdep init \
+    && rosdep update
+
+# Install ROS packages
+RUN apt-get update && apt-get install -y \
+    ros-hydro-ros-base \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create ROS workspace
+COPY . /ws/src/rospy_message_converter
+WORKDIR /ws
+
+# Install the package and its dependencies
+RUN rosdep install --from-paths src --ignore-src --rosdistro hydro -y
+
+# Set up the development environment
+RUN /bin/bash -c "source /opt/ros/hydro/setup.bash && \
+    catkin_make install"

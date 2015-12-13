@@ -4,9 +4,11 @@ services:
   - docker
 
 before_install:
+  - docker build -t rospy_message_converter_hydro -f Dockerfile-hydro .
   - docker build -t rospy_message_converter_indigo -f Dockerfile-indigo .
   - docker build -t rospy_message_converter_jade -f Dockerfile-jade .
 
 script:
+  - docker run rospy_message_converter_hydro /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
   - docker run rospy_message_converter_indigo /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
   - docker run rospy_message_converter_jade /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
