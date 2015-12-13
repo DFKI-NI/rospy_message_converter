@@ -4,6 +4,7 @@ Change Log
 0.4.0 (2015-12-13)
 ------------------
 - Adds support for ROS Jade
+- Removes support for ROS Groovy and Hydro (EOL)
 - Uses single branch for all ROS versions
 - Docker support for local development and Travis CI
 
