@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+0.4.0 (2015-12-13)
+------------------
+- Adds support for ROS Jade
+- Uses single branch for all ROS versions
+- Docker support for local development and Travis CI
+
+0.3.0 (2014-06-03)
+------------------
+- Adds support for ROS Indigo
+
 0.2.0 (2013-07-15)
 ------------------
 - Updates to ROS Hydro
