@@ -6,7 +6,9 @@ services:
 before_install:
   - docker build -t rospy_message_converter_indigo -f Dockerfile-indigo .
   - docker build -t rospy_message_converter_jade -f Dockerfile-jade .
+  - docker build -t rospy_message_converter_kinetic -f Dockerfile-kinetic .
 
 script:
   - docker run rospy_message_converter_indigo /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
   - docker run rospy_message_converter_jade /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
+  - docker run rospy_message_converter_kinetic /bin/bash -c "source devel/setup.bash && rostest rospy_message_converter test_all.test"
