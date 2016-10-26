@@ -127,6 +127,8 @@ def _convert_to_ros_time(field_type, field_value):
     return time
 
 def _convert_to_ros_primitive(field_type, field_value):
+    if field_type == 'string':
+        field_value = field_value.encode('utf-8')
     return field_value
 
 def _convert_to_ros_array(field_type, list_value):
