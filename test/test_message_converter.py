@@ -370,6 +370,14 @@ class TestMessageConverter(unittest.TestCase):
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/String', dictionary)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_unicode(self):
+        from std_msgs.msg import String
+        expected_message = String(data = 'Hello')
+        dictionary = { 'data': unicode(expected_message.data) }
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/String', dictionary)
+        self.assertEqual(message.data,expected_message.data)
+        self.assertEqual(type(message.data),type(expected_message.data))
+
     def test_dictionary_with_time(self):
         from std_msgs.msg import Time
         now_time = rospy.Time.now()
