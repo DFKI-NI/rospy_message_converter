@@ -87,7 +87,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary):
     return message
 
 def _convert_to_ros_type(field_type, field_value):
-    if field_type in ros_binary_types:
+    if is_ros_binary_type(field_type, field_value):
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_to_ros_time(field_type, field_value)
