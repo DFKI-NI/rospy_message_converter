@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS message_generation roslib rospy rostest 
 add_message_files(
   FILES
   TestArray.msg
+  Uint8Array3TestMessage.msg
+  Uint8ArrayTestMessage.msg
   NOINSTALL
 )
 

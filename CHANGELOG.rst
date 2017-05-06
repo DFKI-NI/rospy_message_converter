@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+Unreleased
+------------------
+- Fixes fixed-size uint8 array conversion failure (GitHub issue #5)
+
 0.4.0 (2015-12-13)
 ------------------
 - Adds support for ROS Jade

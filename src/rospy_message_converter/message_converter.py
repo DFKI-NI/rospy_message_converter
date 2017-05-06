@@ -57,7 +57,7 @@ ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
                        'uint16', 'int32', 'uint32', 'int64', 'uint64',
                        'float32', 'float64', 'string']
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
-ros_binary_types = ['uint8[]', 'char[]']
+ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
 list_brackets = re.compile(r'\[[^\]]*\]')
 
@@ -87,7 +87,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary):
     return message
 
 def _convert_to_ros_type(field_type, field_value):
-    if field_type in ros_binary_types:
+    if is_ros_binary_type(field_type, field_value):
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_to_ros_time(field_type, field_value)
@@ -150,7 +150,7 @@ def convert_ros_message_to_dictionary(message):
     return dictionary
 
 def _convert_from_ros_type(field_type, field_value):
-    if field_type in ros_binary_types:
+    if is_ros_binary_type(field_type, field_value):
         field_value = _convert_from_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_from_ros_time(field_type, field_value)
@@ -162,6 +162,25 @@ def _convert_from_ros_type(field_type, field_value):
         field_value = convert_ros_message_to_dictionary(field_value)
 
     return field_value
+
+
+def is_ros_binary_type(field_type, field_value):
+    """ Checks if the field is a binary array one, fixed size or not
+
+    is_ros_binary_type("uint8", 42)
+    >>> False
+    is_ros_binary_type("uint8[]", [42, 18])
+    >>> True
+    is_ros_binary_type("uint8[3]", [42, 18, 21]
+    >>> True
+    is_ros_binary_type("char", 42)
+    >>> False
+    is_ros_binary_type("char[]", [42, 18])
+    >>> True
+    is_ros_binary_type("char[3]", [42, 18, 21]
+    >>> True
+    """
+    return re.search(ros_binary_types_regexp, field_type) is not None
 
 def _convert_from_ros_binary(field_type, field_value):
     field_value = base64.standard_b64encode(field_value)

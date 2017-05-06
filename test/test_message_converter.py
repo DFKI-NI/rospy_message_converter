@@ -102,6 +102,22 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
+    def test_ros_message_with_uint8_array(self):
+        from rospy_message_converter.msg import Uint8ArrayTestMessage
+        from base64 import standard_b64encode
+        expected_data = "".join([chr(i) for i in [97, 98, 99, 100]])
+        message = Uint8ArrayTestMessage(data=expected_data)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message)
+        self.assertEqual(dictionary["data"], standard_b64encode(expected_data))
+
+    def test_ros_message_with_3uint8_array(self):
+        from rospy_message_converter.msg import Uint8Array3TestMessage
+        from base64 import standard_b64encode
+        expected_data = "".join([chr(i) for i in [97, 98, 99, 100]])
+        message = Uint8Array3TestMessage(data=expected_data)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message)
+        self.assertEqual(dictionary["data"], standard_b64encode(expected_data))
+
     def test_ros_message_with_int16(self):
         from std_msgs.msg import Int16
         expected_dictionary = { 'data': -0x7FFF }
