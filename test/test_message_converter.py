@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import unittest
 import rospy
-import rostest
-from pprint import pprint
 from rospy_message_converter import message_converter
 
 class TestMessageConverter(unittest.TestCase):
@@ -73,8 +71,8 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_dictionary = {
             'stamp': { 'secs': now_time.secs, 'nsecs': now_time.nsecs },
             'frame_id' : 'my_frame',
@@ -169,8 +167,8 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_time(self):
         from std_msgs.msg import Time
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_dictionary = {
             'data': { 'secs': now_time.secs, 'nsecs': now_time.nsecs }
         }
@@ -275,8 +273,8 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_header(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
@@ -292,8 +290,8 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_header_with_no_prefix(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
@@ -380,7 +378,8 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_time(self):
         from std_msgs.msg import Time
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Time(data=now_time)
         dictionary = {
             'data': {
@@ -473,4 +472,5 @@ class TestMessageConverter(unittest.TestCase):
 PKG = 'rospy_message_converter'
 NAME = 'test_message_converter'
 if __name__ == '__main__':
+    import rostest
     rostest.unitrun(PKG, NAME, TestMessageConverter)
