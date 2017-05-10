@@ -15,8 +15,8 @@ class TestJsonMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_json = '{{"stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame", "seq": 3}}'\
             .format(now_time.secs, now_time.nsecs)
         message = Header(stamp = now_time, frame_id = 'my_frame', seq = 3)
@@ -48,8 +48,8 @@ class TestJsonMessageConverter(unittest.TestCase):
 
     def test_json_with_header(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
