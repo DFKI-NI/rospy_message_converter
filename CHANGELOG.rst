@@ -4,6 +4,8 @@ Change Log
 Unreleased
 ------------------
 - Fixes fixed-size uint8 array conversion failure (GitHub issue #5)
+- Removes dependency on ROS master in tests (all tests are now unit
+  tests)
 
 0.4.0 (2015-12-13)
 ------------------
