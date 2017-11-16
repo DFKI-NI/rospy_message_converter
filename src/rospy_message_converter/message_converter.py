@@ -35,8 +35,8 @@ import roslib.message
 import rospy
 import re
 import base64
-from pprint import pprint
-
+import sys
+python3 = True if sys.hexversion > 0x03000000 else False
 python_to_ros_type_map = {
     'bool'    : ['bool'],
     'int'     : ['int8', 'byte', 'uint8', 'char',
@@ -47,9 +47,12 @@ python_to_ros_type_map = {
     'unicode' : ['string'],
     'long'    : ['uint64']
 }
-
-python_primitive_types = [bool, int, long, float]
-python_string_types = [str, unicode]
+if python3:
+    python_primitive_types = [bool, int, float]
+    python_string_types = [str]
+else:
+    python_primitive_types = [bool, int, long, float]
+    python_string_types = [str, unicode]
 python_list_types = [list, tuple]
 
 ros_time_types = ['time', 'duration']
@@ -127,6 +130,8 @@ def _convert_to_ros_time(field_type, field_value):
     return time
 
 def _convert_to_ros_primitive(field_type, field_value):
+    if field_type == "string":
+        field_value = field_value.encode('utf-8')
     return field_value
 
 def _convert_to_ros_array(field_type, list_value):
