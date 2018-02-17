@@ -422,6 +422,44 @@ class TestMessageConverter(unittest.TestCase):
                           'std_msgs/Empty',
                           {'invalid_field': 1})
 
+    def test_dictionary_with_empty_service(self):
+        from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
+        expected_req = EmptyRequest()
+        expected_res = EmptyResponse()
+        dictionary_req = {}
+        dictionary_res = {}
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Empty', dictionary_req,
+                                                                      'request')
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Empty', dictionary_res,
+                                                                      'response')
+        self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_setbool_service(self):
+        from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+        expected_req = SetBoolRequest(data=True)
+        expected_res = SetBoolResponse(success=True, message='Success!')
+        dictionary_req = { 'data': True }
+        dictionary_res = { 'success': True, 'message': 'Success!' }
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/SetBool', dictionary_req,
+                                                                      'request')
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/SetBool', dictionary_res,
+                                                                      'response')
+        self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_trigger_service(self):
+        from std_srvs.srv import Trigger, TriggerRequest, TriggerResponse
+        expected_req = TriggerRequest()
+        expected_res = TriggerResponse(success=True, message='Success!')
+        dictionary_req = {}
+        dictionary_res = { 'success': True, 'message': 'Success!' }
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Trigger', dictionary_req,
+                                                                      'request')
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Trigger', dictionary_res,
+                                                                      'response')
+        self.assertEqual(message, expected_res)
 
 
 PKG = 'rospy_message_converter'
