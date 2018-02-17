@@ -64,7 +64,7 @@ ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
 list_brackets = re.compile(r'\[[^\]]*\]')
 
-def convert_dictionary_to_ros_message(message_type, dictionary):
+def convert_dictionary_to_ros_message(message_type, dictionary, kind='message'):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
 
@@ -72,9 +72,23 @@ def convert_dictionary_to_ros_message(message_type, dictionary):
         message_type = "std_msgs/String"
         dict_message = { "data": "Hello, Robot" }
         ros_message = convert_dictionary_to_ros_message(message_type, dict_message)
+
+        message_type = "std_srvs/SetBool"
+        dict_message = { "data": True }
+        kind = "request"
+        ros_message = convert_dictionary_to_ros_message(message_type, dict_message, kind)
     """
-    message_class = roslib.message.get_message_class(message_type)
-    message = message_class()
+    if kind == 'message':
+        message_class = roslib.message.get_message_class(message_type)
+        message = message_class()
+    elif kind == 'request':
+        service_class = roslib.message.get_service_class(message_type)
+        message = service_class._request_class()
+    elif kind == 'response':
+        service_class = roslib.message.get_service_class(message_type)
+        message = service_class._response_class()
+    else:
+        raise ValueError('Unknown kind "%s".' % kind)
     message_fields = dict(_get_message_fields(message))
 
     for field_name, field_value in dictionary.items():
