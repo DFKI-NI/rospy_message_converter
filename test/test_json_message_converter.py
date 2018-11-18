@@ -38,7 +38,14 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = Uint8Array3TestMessage(data=input_data)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
         self.assertEqual(returned_json, expected_json)
-
+        
+    def test_empty_json(self):
+        from std_msgs.msg import String
+        expected_message = None
+        json_str = '{}'
+        message = json_message_converter.convert_json_to_ros_message('std_msgs/String', json_str)
+        self.assertEqual(message, expected_message)
+        
     def test_json_with_string(self):
         from std_msgs.msg import String
         expected_message = String(data = 'Hello')
