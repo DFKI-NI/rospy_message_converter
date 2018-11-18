@@ -64,12 +64,17 @@ list_brackets = re.compile(r'\[[^\]]*\]')
 def convert_dictionary_to_ros_message(message_type, dictionary):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
-
+    If Python dictionary is empty, return None object
+    
     Example:
         message_type = "std_msgs/String"
         dict_message = { "data": "Hello, Robot" }
         ros_message = convert_dictionary_to_ros_message(message_type, dict_message)
     """
+    
+    if len(dictionary) == 0:
+        return None
+    
     message_class = roslib.message.get_message_class(message_type)
     message = message_class()
     message_fields = dict(_get_message_fields(message))
