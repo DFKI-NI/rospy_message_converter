@@ -210,7 +210,14 @@ class TestMessageConverter(unittest.TestCase):
         )
         dictionary = message_converter.convert_ros_message_to_dictionary(multiArray)
         self.assertEqual(dictionary, expected_dictionary)
-
+        
+    def test_empty_dictionary(self):
+        from std_msgs.msg import Bool
+        expected_message = None
+        dictionary = {}
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/Bool', dictionary)
+        self.assertEqual(message, expected_message)
+        
     def test_dictionary_with_array(self):
         from rospy_message_converter.msg import TestArray
         expected_message = TestArray(data = [1.1, 2.2, 3.3, 4.4])
