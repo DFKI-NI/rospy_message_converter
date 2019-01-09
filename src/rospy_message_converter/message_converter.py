@@ -53,9 +53,10 @@ python_string_types = [str, unicode]
 python_list_types = [list, tuple]
 
 ros_time_types = ['time', 'duration']
-ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
-                       'uint16', 'int32', 'uint32', 'int64', 'uint64',
-                       'float32', 'float64', 'string']
+ros_primitive_types = ['float32', 'float64', 'string']
+ros_boolean_types = ['bool']
+ros_integer_types = ['byte', 'char', 'int8', 'uint8', 'int16',
+                     'uint16', 'int32', 'uint32', 'int64', 'uint64']
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
 ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
@@ -93,6 +94,10 @@ def _convert_to_ros_type(field_type, field_value):
         field_value = _convert_to_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
         field_value = _convert_to_ros_primitive(field_type, field_value)
+    elif field_type in ros_integer_types:
+        field_value = int(field_value)
+    elif field_type in ros_boolean_types:
+        field_type = bool(field_type)
     elif _is_field_type_an_array(field_type):
         field_value = _convert_to_ros_array(field_type, field_value)
     else:
@@ -156,6 +161,10 @@ def _convert_from_ros_type(field_type, field_value):
         field_value = _convert_from_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
         field_value = field_value
+    elif field_type in ros_integer_types:
+        field_value = int(field_value)
+    elif field_type in ros_boolean_types:
+        field_type = bool(field_type)
     elif _is_field_type_an_array(field_type):
         field_value = _convert_from_ros_array(field_type, field_value)
     else:
