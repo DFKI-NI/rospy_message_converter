@@ -53,9 +53,9 @@ python_string_types = [str, unicode]
 python_list_types = [list, tuple]
 
 ros_time_types = ['time', 'duration']
-ros_primitive_types = ['float32', 'float64', 'string']
+ros_primitive_types = ['float32', 'float64', 'string', 'char']
 ros_boolean_types = ['bool']
-ros_integer_types = ['byte', 'char', 'int8', 'uint8', 'int16',
+ros_integer_types = ['byte', 'int8', 'uint8', 'int16',
                      'uint16', 'int32', 'uint32', 'int64', 'uint64']
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
 ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
