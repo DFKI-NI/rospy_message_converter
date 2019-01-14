@@ -472,5 +472,5 @@ class TestMessageConverter(unittest.TestCase):
 PKG = 'rospy_message_converter'
 NAME = 'test_message_converter'
 if __name__ == '__main__':
-    import rostest
-    rostest.unitrun(PKG, NAME, TestMessageConverter)
+    import rosunit
+    rosunit.unitrun(PKG, NAME, TestMessageConverter)

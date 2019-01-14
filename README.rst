@@ -50,7 +50,7 @@ To run the tests:
 
 .. code-block:: bash
 
-    rostest rospy_message_converter test_all.test
+    catkin_make test
 
 
 License

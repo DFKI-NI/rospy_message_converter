@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import unittest
 import rospy
-import rostest
 from rospy_message_converter import json_message_converter
 
 class TestJsonMessageConverter(unittest.TestCase):
@@ -70,4 +69,5 @@ class TestJsonMessageConverter(unittest.TestCase):
 PKG = 'rospy_message_converter'
 NAME = 'test_json_message_converter'
 if __name__ == '__main__':
-    rostest.unitrun(PKG, NAME, TestJsonMessageConverter)
+    import rosunit
+    rosunit.unitrun(PKG, NAME, TestJsonMessageConverter)
