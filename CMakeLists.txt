@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rospy_message_converter)
 
-find_package(catkin REQUIRED COMPONENTS message_generation roslib rospy rostest std_msgs)
+find_package(catkin REQUIRED COMPONENTS message_generation rostest std_msgs)
 
 # Generate messages for testing (NOINSTALL)
 add_message_files(
