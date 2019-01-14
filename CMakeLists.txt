@@ -24,5 +24,5 @@ catkin_package(CATKIN_DEPENDS message_runtime std_msgs)
 
 # Test launch files
 if(CATKIN_ENABLE_TESTING)
-add_rostest(test/test_all.test)
-endif(CATKIN_ENABLE_TESTING)
+  add_rostest(test/test_all.test)
+endif()
