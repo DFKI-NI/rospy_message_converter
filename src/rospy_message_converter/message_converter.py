@@ -35,8 +35,8 @@ import roslib.message
 import rospy
 import re
 import base64
-from pprint import pprint
-
+import sys
+python3 = True if sys.hexversion > 0x03000000 else False
 python_to_ros_type_map = {
     'bool'    : ['bool'],
     'int'     : ['int8', 'byte', 'uint8', 'char',
@@ -47,9 +47,12 @@ python_to_ros_type_map = {
     'unicode' : ['string'],
     'long'    : ['uint64']
 }
-
-python_primitive_types = [bool, int, long, float]
-python_string_types = [str, unicode]
+if python3:
+    python_primitive_types = [bool, int, float]
+    python_string_types = [str]
+else:
+    python_primitive_types = [bool, int, long, float]
+    python_string_types = [str, unicode]
 python_list_types = [list, tuple]
 
 ros_time_types = ['time', 'duration']
@@ -61,23 +64,44 @@ ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
 list_brackets = re.compile(r'\[[^\]]*\]')
 
-def convert_dictionary_to_ros_message(message_type, dictionary):
+def convert_dictionary_to_ros_message(message_type, dictionary, kind='message'):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
-    If Python dictionary is empty and message_type it not std_msgs/Empty, return None object
-    
-    Example:
+    If Python dictionary is empty and the message has at least one field, return None object
+
+    Examples:
         message_type = "std_msgs/String"
         dict_message = { "data": "Hello, Robot" }
         ros_message = convert_dictionary_to_ros_message(message_type, dict_message)
+
+        message_type = "std_srvs/SetBool"
+        dict_message = { "data": True }
+        kind = "request"
+        ros_message = convert_dictionary_to_ros_message(message_type, dict_message, kind)
+
+        message_type = "std_msgs/String"
+        dict_message = {}
+        assert convert_dictionary_to_ros_message(message_type, dict_message) is None
+
+        message_type = "std_msgs/Empty"
+        dict_message = {}
+        assert convert_dictionary_to_ros_message(message_type, dict_message) == std_msgs.msg.Empty()
     """
-    
-    if len(dictionary) == 0 and message_type != "std_msgs/Empty":
-        return None
-    
-    message_class = roslib.message.get_message_class(message_type)
-    message = message_class()
+    if kind == 'message':
+        message_class = roslib.message.get_message_class(message_type)
+        message = message_class()
+    elif kind == 'request':
+        service_class = roslib.message.get_service_class(message_type)
+        message = service_class._request_class()
+    elif kind == 'response':
+        service_class = roslib.message.get_service_class(message_type)
+        message = service_class._response_class()
+    else:
+        raise ValueError('Unknown kind "%s".' % kind)
     message_fields = dict(_get_message_fields(message))
+
+    if len(dictionary) == 0 and len(message_fields) != 0:
+        return None
 
     for field_name, field_value in dictionary.items():
         if field_name in message_fields:
@@ -132,6 +156,8 @@ def _convert_to_ros_time(field_type, field_value):
     return time
 
 def _convert_to_ros_primitive(field_type, field_value):
+    if field_type == "string":
+        field_value = field_value.encode('utf-8')
     return field_value
 
 def _convert_to_ros_array(field_type, list_value):
