@@ -1,8 +1,7 @@
 #!/usr/bin/env python
+import struct
 import unittest
 import rospy
-import rostest
-from pprint import pprint
 from rospy_message_converter import message_converter
 
 class TestMessageConverter(unittest.TestCase):
@@ -13,6 +12,7 @@ class TestMessageConverter(unittest.TestCase):
             'data': [1.1, 2.2, 3.3]
         }
         message = TestArray(data = expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -20,6 +20,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Bool
         expected_dictionary = { 'data': True }
         message = Bool(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -27,13 +28,15 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Byte
         expected_dictionary = { 'data': 5 }
         message = Byte(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_char(self):
         from std_msgs.msg import Char
-        expected_dictionary = { 'data': 'c' }
+        expected_dictionary = { 'data': 99 }
         message = Char(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -47,6 +50,7 @@ class TestMessageConverter(unittest.TestCase):
             }
         }
         message = Duration(data=duration)
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -54,27 +58,30 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Empty
         expected_dictionary = {}
         message = Empty()
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_float32(self):
         from std_msgs.msg import Float32
-        expected_dictionary = { 'data': 0x7F7FFFFD }
+        expected_dictionary = { 'data': struct.unpack('<f', '\x7F\x7F\xFF\xFD')[0] }
         message = Float32(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_float64(self):
         from std_msgs.msg import Float64
-        expected_dictionary = { 'data': 0x7FEFFFFFFFFFFFF }
+        expected_dictionary = { 'data': struct.unpack('<d', '\x7F\xEF\xFF\xFF\xFF\xFF\xFF\xFD')[0] }
         message = Float64(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_dictionary = {
             'stamp': { 'secs': now_time.secs, 'nsecs': now_time.nsecs },
             'frame_id' : 'my_frame',
@@ -85,6 +92,7 @@ class TestMessageConverter(unittest.TestCase):
             frame_id = expected_dictionary['frame_id'],
             seq = expected_dictionary['seq']
         )
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -92,6 +100,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Int8
         expected_dictionary = { 'data': -0x7F }
         message = Int8(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -99,6 +108,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import UInt8
         expected_dictionary = { 'data': 0xFF }
         message = UInt8(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -107,14 +117,16 @@ class TestMessageConverter(unittest.TestCase):
         from base64 import standard_b64encode
         expected_data = "".join([chr(i) for i in [97, 98, 99, 100]])
         message = Uint8ArrayTestMessage(data=expected_data)
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary["data"], standard_b64encode(expected_data))
 
     def test_ros_message_with_3uint8_array(self):
         from rospy_message_converter.msg import Uint8Array3TestMessage
         from base64 import standard_b64encode
-        expected_data = "".join([chr(i) for i in [97, 98, 99, 100]])
+        expected_data = "".join([chr(i) for i in [97, 98, 99]])
         message = Uint8Array3TestMessage(data=expected_data)
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary["data"], standard_b64encode(expected_data))
 
@@ -122,6 +134,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Int16
         expected_dictionary = { 'data': -0x7FFF }
         message = Int16(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -129,6 +142,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import UInt16
         expected_dictionary = { 'data': 0xFFFF }
         message = UInt16(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -136,6 +150,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Int32
         expected_dictionary = { 'data': -0x7FFFFFFF }
         message = Int32(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -143,6 +158,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import UInt32
         expected_dictionary = { 'data': 0xFFFFFFFF }
         message = UInt32(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -150,6 +166,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import Int64
         expected_dictionary = { 'data': -0x7FFFFFFFFFFFFFFF }
         message = Int64(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -157,6 +174,7 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import UInt64
         expected_dictionary = { 'data': 0xFFFFFFFFFFFFFFFF }
         message = UInt64(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -164,17 +182,19 @@ class TestMessageConverter(unittest.TestCase):
         from std_msgs.msg import String
         expected_dictionary = { 'data': 'Hello' }
         message = String(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_time(self):
         from std_msgs.msg import Time
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_dictionary = {
             'data': { 'secs': now_time.secs, 'nsecs': now_time.nsecs }
         }
         message = Time(data=now_time)
+        message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
@@ -204,11 +224,12 @@ class TestMessageConverter(unittest.TestCase):
             dim = [dimension1, dimension2],
             data_offset = expected_dictionary['layout']['data_offset']
         )
-        multiArray = Float64MultiArray(
+        message = Float64MultiArray(
             layout = layout,
             data   = expected_dictionary['data']
         )
-        dictionary = message_converter.convert_ros_message_to_dictionary(multiArray)
+        message = serialize_deserialize(message)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_empty_dictionary(self):
@@ -223,6 +244,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = TestArray(data = [1.1, 2.2, 3.3, 4.4])
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/TestArray', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_bool(self):
@@ -230,6 +252,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Bool(data = True)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Bool', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_byte(self):
@@ -237,13 +260,15 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Byte(data = 3)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Byte', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_char(self):
         from std_msgs.msg import Char
-        expected_message = Char(data = 'c')
+        expected_message = Char(data = 99)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Char', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_duration(self):
@@ -257,6 +282,7 @@ class TestMessageConverter(unittest.TestCase):
             }
         }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Duration', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_empty(self):
@@ -264,26 +290,29 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Empty()
         dictionary = {}
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Empty', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_float32(self):
         from std_msgs.msg import Float32
-        expected_message = Float32(data = 0x7F7FFFFD)
+        expected_message = Float32(data = struct.unpack('<f', '\x7F\x7F\xFF\xFD')[0])
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Float32', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_float64(self):
         from std_msgs.msg import Float64
-        expected_message = Float64(data = 0x7FEFFFFFFFFFFFF)
+        expected_message = Float64(data = struct.unpack('<d', '\x7F\xEF\xFF\xFF\xFF\xFF\xFF\xFD')[0])
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Float64', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_header(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
@@ -295,12 +324,13 @@ class TestMessageConverter(unittest.TestCase):
             'seq': expected_message.seq
         }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Header', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_header_with_no_prefix(self):
         from std_msgs.msg import Header
-        rospy.init_node('time_node')
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
@@ -312,6 +342,7 @@ class TestMessageConverter(unittest.TestCase):
             'seq': expected_message.seq
         }
         message = message_converter.convert_dictionary_to_ros_message('Header', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_int8(self):
@@ -319,6 +350,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Int8(data = -0x7F)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Int8', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_uint8(self):
@@ -326,6 +358,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = UInt8(data = 0xFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/UInt8', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_int16(self):
@@ -333,6 +366,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Int16(data = -0x7FFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Int16', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_uint16(self):
@@ -340,6 +374,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = UInt16(data = 0xFFFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/UInt16', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_int32(self):
@@ -347,6 +382,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Int32(data = -0x7FFFFFFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Int32', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_uint32(self):
@@ -354,6 +390,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = UInt32(data = 0xFFFFFFFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/UInt32', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_int64(self):
@@ -361,6 +398,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Int64(data = -0x7FFFFFFFFFFFFFFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Int64', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_uint64(self):
@@ -368,6 +406,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = UInt64(data = 0xFFFFFFFFFFFFFFFF)
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/UInt64', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_string(self):
@@ -375,11 +414,22 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = String(data = 'Hello')
         dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/String', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_unicode(self):
+        from std_msgs.msg import String
+        expected_message = String(data = 'Hello')
+        dictionary = { 'data': unicode(expected_message.data) }
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/String', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message.data,expected_message.data)
+        self.assertEqual(type(message.data),type(expected_message.data))
 
     def test_dictionary_with_time(self):
         from std_msgs.msg import Time
-        now_time = rospy.Time.now()
+        from time import time
+        now_time = rospy.Time(time())
         expected_message = Time(data=now_time)
         dictionary = {
             'data': {
@@ -388,6 +438,7 @@ class TestMessageConverter(unittest.TestCase):
             }
         }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Time', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_child_message(self):
@@ -421,6 +472,7 @@ class TestMessageConverter(unittest.TestCase):
             'data': expected_message.data
         }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/Float64MultiArray', dictionary)
+        expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_invalid_message_fields(self):
@@ -429,9 +481,72 @@ class TestMessageConverter(unittest.TestCase):
                           'std_msgs/Empty',
                           {'invalid_field': 1})
 
+    def test_dictionary_with_empty_service(self):
+        from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
+        expected_req = EmptyRequest()
+        expected_res = EmptyResponse()
+        dictionary_req = {}
+        dictionary_res = {}
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Empty', dictionary_req,
+                                                                      'request')
+        expected_req = serialize_deserialize(expected_req)
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Empty', dictionary_res,
+                                                                      'response')
+        expected_res = serialize_deserialize(expected_res)
+        self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_setbool_service(self):
+        from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+        expected_req = SetBoolRequest(data=True)
+        expected_res = SetBoolResponse(success=True, message='Success!')
+        dictionary_req = { 'data': True }
+        dictionary_res = { 'success': True, 'message': 'Success!' }
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/SetBool', dictionary_req,
+                                                                      'request')
+        expected_req = serialize_deserialize(expected_req)
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/SetBool', dictionary_res,
+                                                                      'response')
+        expected_res = serialize_deserialize(expected_res)
+        self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_trigger_service(self):
+        from std_srvs.srv import Trigger, TriggerRequest, TriggerResponse
+        expected_req = TriggerRequest()
+        expected_res = TriggerResponse(success=True, message='Success!')
+        dictionary_req = {}
+        dictionary_res = { 'success': True, 'message': 'Success!' }
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Trigger', dictionary_req,
+                                                                      'request')
+        expected_req = serialize_deserialize(expected_req)
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message('std_srvs/Trigger', dictionary_res,
+                                                                      'response')
+        expected_res = serialize_deserialize(expected_res)
+        self.assertEqual(message, expected_res)
+
+
+def serialize_deserialize(message):
+    """
+    Serialize and then deserialize a message. This simulates sending a message
+    between ROS nodes and makes sure that the ROS messages being tested are
+    actually serializable, and are in the same format as they would be received
+    over the network. In rospy, it is possible to assign an illegal data type
+    to a message field (for example, `message = String(data=42)`), but trying
+    to publish this message will throw `SerializationError: field data must be
+    of type str`. This method will expose such bugs.
+    """
+    from StringIO import StringIO
+    buff = StringIO()
+    message.serialize(buff)
+    result = message.__class__()   # create new instance of same class as message
+    result.deserialize(buff.getvalue())
+    return result
 
 
 PKG = 'rospy_message_converter'
 NAME = 'test_message_converter'
 if __name__ == '__main__':
-    rostest.unitrun(PKG, NAME, TestMessageConverter)
+    import rosunit
+    rosunit.unitrun(PKG, NAME, TestMessageConverter)

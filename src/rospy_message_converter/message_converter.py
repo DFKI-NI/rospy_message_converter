@@ -48,10 +48,8 @@ python_to_ros_type_map = {
     'long'    : ['uint64']
 }
 if python3:
-    python_primitive_types = [bool, int, float]
     python_string_types = [str]
 else:
-    python_primitive_types = [bool, int, long, float]
     python_string_types = [str, unicode]
 python_list_types = [list, tuple]
 
@@ -130,7 +128,6 @@ def _convert_to_ros_type(field_type, field_value):
     return field_value
 
 def _convert_to_ros_binary(field_type, field_value):
-    binary_value_as_string = field_value
     if type(field_value) in python_string_types:
         binary_value_as_string = base64.standard_b64decode(field_value)
     else:

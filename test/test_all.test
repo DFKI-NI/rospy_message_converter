@@ -1,4 +1,0 @@
-<launch>
-    <test test-name="test_message_converter" pkg="rospy_message_converter" type="test_message_converter.py" />
-    <test test-name="test_json_message_converter" pkg="rospy_message_converter" type="test_json_message_converter.py" />
-</launch>
