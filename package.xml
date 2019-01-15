@@ -21,4 +21,5 @@
   <run_depend>std_msgs</run_depend>
 
   <test_depend>rosunit</test_depend>
+  <test_depend>std_srvs</test_depend>
 </package>
