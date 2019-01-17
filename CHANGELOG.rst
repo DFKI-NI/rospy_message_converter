@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.0 (2019-01-17)
+------------------
 * Initial release into Lunar and Melodic
 * Remove support for Jade (EOL)
 * Change maintainer from Brandon Alexander to Martin Günther
