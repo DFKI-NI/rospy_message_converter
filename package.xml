@@ -6,8 +6,8 @@
   <maintainer email="martin.guenther@dfki.de">Martin Günther</maintainer>
   <license>BSD</license>
   <url type="website">http://ros.org/wiki/rospy_message_converter</url>
-  <url type="repository">https://github.com/baalexander/rospy_message_converter</url>
-  <url type="bugtracker">https://github.com/baalexander/rospy_message_converter/issues</url>
+  <url type="repository">https://github.com/uos/rospy_message_converter</url>
+  <url type="bugtracker">https://github.com/uos/rospy_message_converter/issues</url>
   <author email="baalexander@gmail.com">Brandon Alexander</author>
 
   <buildtool_depend>catkin</buildtool_depend>
