@@ -5,9 +5,7 @@ services:
 
 env:
   matrix:
-    - CI_ROS_DISTRO="indigo"
     - CI_ROS_DISTRO="kinetic"
-    - CI_ROS_DISTRO="lunar"
     - CI_ROS_DISTRO="melodic"
 
 install:
