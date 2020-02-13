@@ -62,7 +62,7 @@ ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
 list_brackets = re.compile(r'\[[^\]]*\]')
 
-def convert_dictionary_to_ros_message(message_type, dictionary, kind='message'):
+def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
 
@@ -97,7 +97,10 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message'):
         else:
             error_message = 'ROS message type "{0}" has no field named "{1}"'\
                 .format(message_type, field_name)
-            raise ValueError(error_message)
+            if strict_mode:
+                raise ValueError(error_message)
+            else:
+                rospy.logerr('{}! It will be ignored.'.format(error_message))
 
     return message
 
