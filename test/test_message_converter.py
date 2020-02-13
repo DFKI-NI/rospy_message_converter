@@ -286,6 +286,21 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_empty_additional_args_strict_mode(self):
+        from std_msgs.msg import Empty
+        dictionary = {"additional_args": "should raise value error"}
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('std_msgs/Empty', dictionary)
+        self.assertTrue("has no field named" in context.exception.message)
+
+    def test_dictionary_with_empty_additional_args_forgiving(self):
+        from std_msgs.msg import Empty
+        expected_message = Empty()
+        dictionary = {"additional_args": "should be ignored"}
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/Empty', dictionary, strict_mode=False)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
     def test_dictionary_with_float32(self):
         from std_msgs.msg import Float32
         expected_message = Float32(data = struct.unpack('<f', '\x7F\x7F\xFF\xFD')[0])
