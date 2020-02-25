@@ -212,9 +212,6 @@ def _convert_from_ros_time(field_type, field_value):
     }
     return field_value
 
-def _convert_from_ros_primitive(field_type, field_value):
-    return field_value
-
 def _convert_from_ros_array(field_type, field_value):
     list_type = list_brackets.sub('', field_type)
     return [_convert_from_ros_type(list_type, value) for value in field_value]
