@@ -175,6 +175,8 @@ def _convert_from_ros_type(field_type, field_value):
         field_value = _convert_from_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
         field_value = field_value
+    elif _is_field_type_a_primitive_array(field_type):
+        field_value = list(field_value)
     elif _is_field_type_an_array(field_type):
         field_value = _convert_from_ros_array(field_type, field_value)
     else:
@@ -212,9 +214,6 @@ def _convert_from_ros_time(field_type, field_value):
     }
     return field_value
 
-def _convert_from_ros_primitive(field_type, field_value):
-    return field_value
-
 def _convert_from_ros_array(field_type, field_value):
     list_type = list_brackets.sub('', field_type)
     return [_convert_from_ros_type(list_type, value) for value in field_value]
@@ -224,3 +223,7 @@ def _get_message_fields(message):
 
 def _is_field_type_an_array(field_type):
     return list_brackets.search(field_type) is not None
+
+def _is_field_type_a_primitive_array(field_type):
+    list_type = list_brackets.sub('', field_type)
+    return list_type in ros_primitive_types
