@@ -111,6 +111,8 @@ def _convert_to_ros_type(field_type, field_value):
         field_value = _convert_to_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
         field_value = _convert_to_ros_primitive(field_type, field_value)
+    elif _is_field_type_a_primitive_array(field_type):
+        field_value = field_value
     elif _is_field_type_an_array(field_type):
         field_value = _convert_to_ros_array(field_type, field_value)
     else:
