@@ -146,7 +146,8 @@ def _convert_to_ros_time(field_type, field_value):
     return time
 
 def _convert_to_ros_primitive(field_type, field_value):
-    if field_type == "string":
+    # std_msgs/msg/_String.py always calls encode() on python3, so don't do it here
+    if field_type == "string" and not python3:
         field_value = field_value.encode('utf-8')
     return field_value
 
