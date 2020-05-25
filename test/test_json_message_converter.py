@@ -17,16 +17,22 @@ class TestJsonMessageConverter(unittest.TestCase):
         from std_msgs.msg import Header
         from time import time
         now_time = rospy.Time(time())
-        expected_json = '{{"stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame", "seq": 3}}'\
+        expected_json1 = '{{"stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame", "seq": 3}}'\
+            .format(now_time.secs, now_time.nsecs)
+        expected_json2 = '{{"seq": 3, "stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame"}}'\
+            .format(now_time.secs, now_time.nsecs)
+        expected_json3 = '{{"frame_id": "my_frame", "seq": 3, "stamp": {{"secs": {0}, "nsecs": {1}}}}}'\
             .format(now_time.secs, now_time.nsecs)
         message = Header(stamp = now_time, frame_id = 'my_frame', seq = 3)
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertEqual(returned_json, expected_json)
+        self.assertTrue(returned_json == expected_json1 or
+                        returned_json == expected_json2 or
+                        returned_json == expected_json3)
 
     def test_ros_message_with_uint8_array(self):
         from rospy_message_converter.msg import Uint8ArrayTestMessage
-        input_data = "".join([chr(i) for i in [97, 98, 99, 100]])
+        input_data = [97, 98, 99, 100]
         expected_json = '{"data": "YWJjZA=="}'  # base64.standard_b64encode("abcd") is "YWJjZA=="
         message = Uint8ArrayTestMessage(data=input_data)
         message = serialize_deserialize(message)
@@ -35,7 +41,7 @@ class TestJsonMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_3uint8_array(self):
         from rospy_message_converter.msg import Uint8Array3TestMessage
-        input_data = "".join([chr(i) for i in [97, 98, 99]])
+        input_data = [97, 98, 99]
         expected_json = '{"data": "YWJj"}'  # base64.standard_b64encode("abc") is "YWJj"
         message = Uint8Array3TestMessage(data=input_data)
         message = serialize_deserialize(message)
@@ -82,8 +88,8 @@ def serialize_deserialize(message):
     to publish this message will throw `SerializationError: field data must be
     of type str`. This method will expose such bugs.
     """
-    from StringIO import StringIO
-    buff = StringIO()
+    from io import BytesIO
+    buff = BytesIO()
     message.serialize(buff)
     result = message.__class__()   # create new instance of same class as message
     result.deserialize(buff.getvalue())
