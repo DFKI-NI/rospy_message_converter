@@ -119,7 +119,7 @@ class TestMessageConverter(unittest.TestCase):
         message = Uint8ArrayTestMessage(data=expected_data)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        expected_data = standard_b64encode(bytearray(expected_data))
+        expected_data = standard_b64encode(bytearray(expected_data)).decode('utf-8')
         self.assertEqual(dictionary["data"], expected_data)
 
     def test_ros_message_with_3uint8_array(self):
@@ -129,7 +129,7 @@ class TestMessageConverter(unittest.TestCase):
         message = Uint8Array3TestMessage(data=expected_data)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        expected_data = standard_b64encode(bytearray(expected_data))
+        expected_data = standard_b64encode(bytearray(expected_data)).decode('utf-8')
         self.assertEqual(dictionary["data"], expected_data)
 
     def test_ros_message_with_int16(self):

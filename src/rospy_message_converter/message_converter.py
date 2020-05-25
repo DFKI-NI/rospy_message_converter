@@ -207,7 +207,7 @@ def is_ros_binary_type(field_type, field_value):
     return re.search(ros_binary_types_regexp, field_type) is not None
 
 def _convert_from_ros_binary(field_type, field_value):
-    field_value = base64.standard_b64encode(field_value)
+    field_value = base64.standard_b64encode(field_value).decode('utf-8')
     return field_value
 
 def _convert_from_ros_time(field_type, field_value):
