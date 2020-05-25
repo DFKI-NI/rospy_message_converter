@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Initial release into Noetic
+* Decode base64-encoded byte arrays as unicode
+* Make tests compatible with python3
+* add check for python3 str serializing `#33 <https://github.com/uos/rospy_message_converter/issues/33>`_ (`#34 <https://github.com/uos/rospy_message_converter/issues/34>`_)
+* efficient conversion of primitive array to ros type (`#31 <https://github.com/uos/rospy_message_converter/issues/31>`_)
+* efficient conversion of primitive array
+* removed unused _convert_from_ros_primitive
+* optionally ignore extra fields when deserializing (`#29 <https://github.com/uos/rospy_message_converter/issues/29>`_)
+* Remove EOL distros indigo + lunar from CI
+* travis CI: Use matrix to split ROS distros
+* Update README (convert to md, add build status)
+* Contributors: Martin Günther, George Hartt, Jannik Abbenseth, Omri Rozenzaft
+
 0.5.0 (2019-01-17)
 ------------------
 * Initial release into Lunar and Melodic
