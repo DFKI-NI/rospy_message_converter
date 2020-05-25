@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.1 (2020-05-25)
+------------------
 * Initial release into Noetic
 * Decode base64-encoded byte arrays as unicode
 * Make tests compatible with python3
