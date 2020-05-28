@@ -1,7 +1,10 @@
 FROM ros:melodic-ros-core
 
-RUN apt-get update && apt-get install -y \
-    build-essential
+RUN apt-get update \
+    && apt-get install -y build-essential python-rosdep cmake \
+    && rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+RUN rosdep init && rosdep update
 
 # Create ROS workspace
 COPY . /ws/src/rospy_message_converter
