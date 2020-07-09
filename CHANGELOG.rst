@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Check for wrong field types when converting from dict to ros msg
+* Check for missing fields when converting from dict to ros msg
+* Contributors: Martin Günther, alecarnevale
+
 0.5.1 (2020-05-25)
 ------------------
 * Initial release into Noetic
