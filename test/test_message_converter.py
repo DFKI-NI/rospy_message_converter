@@ -303,6 +303,27 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_missing_field_unchecked(self):
+        from std_msgs.msg import Bool
+        expected_message = Bool(data=False)
+        dictionary = {}
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/Bool', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_missing_field_checked(self):
+        dictionary = {}
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('std_msgs/Bool', dictionary, check_missing_fields=True)
+        self.assertEqual('''Missing fields "{'data': 'bool'}"''',
+                         context.exception.args[0])
+
+    def test_dictionary_with_wrong_type(self):
+        dictionary = {"data": "should_be_a_bool"}
+        with self.assertRaises(TypeError) as context:
+            message_converter.convert_dictionary_to_ros_message('std_msgs/Bool', dictionary)
+        self.assertEqual("Wrong type: 'should_be_a_bool' must be bool", context.exception.args[0])
+
     def test_dictionary_with_float32(self):
         from std_msgs.msg import Float32
         expected_message = Float32(data = struct.unpack('<f', b'\x7F\x7F\xFF\xFD')[0])
