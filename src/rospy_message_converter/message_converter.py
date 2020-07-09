@@ -48,6 +48,23 @@ python_to_ros_type_map = {
     'unicode' : ['string'],
     'long'    : ['uint64']
 }
+ros_to_python_type_map = {
+    'bool'    : ['bool'],
+    'byte'    : ['int'],
+    'char'    : ['int'],
+    'float32' : ['int', 'float'],
+    'float64' : ['int', 'float'],
+    'int16'   : ['int'],
+    'int32'   : ['int'],
+    'int64'   : ['int'],
+    'int8'    : ['int'],
+    'string'  : ['str', 'unicode'],
+    'uint16'  : ['int'],
+    'uint32'  : ['int'],
+    'uint64'  : ['int', 'long'],
+    'uint8'   : ['int']
+}
+
 if python3:
     python_string_types = [str]
 else:
@@ -118,7 +135,7 @@ def _convert_to_ros_type(field_type, field_value):
     elif field_type in ros_time_types:
         field_value = _convert_to_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
-        if type(field_value).__name__ not in _extract_python_type(field_type):
+        if type(field_value).__name__ not in ros_to_python_type_map[field_type]:
             raise TypeError("Wrong type: '{0}' must be {1}".format(field_value, field_type))
         field_value = _convert_to_ros_primitive(field_type, field_value)
     elif _is_field_type_a_primitive_array(field_type):
@@ -196,18 +213,6 @@ def _convert_from_ros_type(field_type, field_value):
         field_value = convert_ros_message_to_dictionary(field_value)
 
     return field_value
-
-def _extract_python_type(ros_type):
-    """
-    Find Python type from ROS type.
-    """
-    types = []
-    for k in python_to_ros_type_map:
-        if ros_type in python_to_ros_type_map[k]:
-            types.append(k)
-    if types == []:
-        raise TypeError("Cannot find {0} in python_to_ros_type_map".format(ros_type))
-    return types
 
 def is_ros_binary_type(field_type, field_value):
     """ Checks if the field is a binary array one, fixed size or not
