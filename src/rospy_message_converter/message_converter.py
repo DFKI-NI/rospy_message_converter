@@ -36,6 +36,7 @@ import rospy
 import re
 import base64
 import sys
+import copy
 python3 = True if sys.hexversion > 0x03000000 else False
 python_to_ros_type_map = {
     'bool'    : ['bool'],
@@ -47,6 +48,23 @@ python_to_ros_type_map = {
     'unicode' : ['string'],
     'long'    : ['uint64']
 }
+ros_to_python_type_map = {
+    'bool'    : ['bool'],
+    'byte'    : ['int'],
+    'char'    : ['int'],
+    'float32' : ['int', 'float'],
+    'float64' : ['int', 'float'],
+    'int16'   : ['int'],
+    'int32'   : ['int'],
+    'int64'   : ['int'],
+    'int8'    : ['int'],
+    'string'  : ['str', 'unicode'],
+    'uint16'  : ['int'],
+    'uint32'  : ['int'],
+    'uint64'  : ['int', 'long'],
+    'uint8'   : ['int']
+}
+
 if python3:
     python_string_types = [str]
 else:
@@ -62,7 +80,7 @@ ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
 list_brackets = re.compile(r'\[[^\]]*\]')
 
-def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True):
+def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True, check_missing_fields=False):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
 
@@ -89,11 +107,14 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
         raise ValueError('Unknown kind "%s".' % kind)
     message_fields = dict(_get_message_fields(message))
 
+    remaining_message_fields = copy.deepcopy(message_fields)
+
     for field_name, field_value in dictionary.items():
         if field_name in message_fields:
             field_type = message_fields[field_name]
             field_value = _convert_to_ros_type(field_type, field_value)
             setattr(message, field_name, field_value)
+            del remaining_message_fields[field_name]
         else:
             error_message = 'ROS message type "{0}" has no field named "{1}"'\
                 .format(message_type, field_name)
@@ -101,6 +122,10 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
                 raise ValueError(error_message)
             else:
                 rospy.logerr('{}! It will be ignored.'.format(error_message))
+
+    if check_missing_fields and remaining_message_fields:
+        error_message = 'Missing fields "{0}"'.format(remaining_message_fields)
+        raise ValueError(error_message)
 
     return message
 
@@ -110,6 +135,8 @@ def _convert_to_ros_type(field_type, field_value):
     elif field_type in ros_time_types:
         field_value = _convert_to_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
+        if type(field_value).__name__ not in ros_to_python_type_map[field_type]:
+            raise TypeError("Wrong type: '{0}' must be {1}".format(field_value, field_type))
         field_value = _convert_to_ros_primitive(field_type, field_value)
     elif _is_field_type_a_primitive_array(field_type):
         field_value = field_value
@@ -186,7 +213,6 @@ def _convert_from_ros_type(field_type, field_value):
         field_value = convert_ros_message_to_dictionary(field_value)
 
     return field_value
-
 
 def is_ros_binary_type(field_type, field_value):
     """ Checks if the field is a binary array one, fixed size or not
