@@ -293,7 +293,8 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = {"additional_args": "should raise value error"}
         with self.assertRaises(ValueError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/Empty', dictionary)
-            self.assertTrue("has no field named" in context.exception.message)
+        self.assertEqual('''ROS message type "std_msgs/Empty" has no field named "additional_args"''',
+                         context.exception.args[0])
 
     def test_dictionary_with_empty_additional_args_forgiving(self):
         from std_msgs.msg import Empty
