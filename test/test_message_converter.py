@@ -242,6 +242,14 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_uint8_array(self):
+        from rospy_message_converter.msg import Uint8ArrayTestMessage
+        expected_message = Uint8ArrayTestMessage(data=[1, 2, 3, 4])
+        dictionary = {'data': expected_message.data}
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
     def test_dictionary_with_bool(self):
         from std_msgs.msg import Bool
         expected_message = Bool(data = True)
