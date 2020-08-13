@@ -38,16 +38,6 @@ import base64
 import sys
 import copy
 python3 = True if sys.hexversion > 0x03000000 else False
-python_to_ros_type_map = {
-    'bool'    : ['bool'],
-    'int'     : ['int8', 'byte', 'uint8', 'char',
-                 'int16', 'uint16', 'int32', 'uint32',
-                 'int64', 'uint64', 'float32', 'float64'],
-    'float'   : ['float32', 'float64'],
-    'str'     : ['string'],
-    'unicode' : ['string'],
-    'long'    : ['uint64']
-}
 ros_to_python_type_map = {
     'bool'    : ['bool'],
     'byte'    : ['int'],
