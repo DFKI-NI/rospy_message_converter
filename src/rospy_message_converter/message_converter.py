@@ -251,5 +251,9 @@ def _is_field_type_an_array(field_type):
     return list_brackets.search(field_type) is not None
 
 def _is_field_type_a_primitive_array(field_type):
-    list_type = list_brackets.sub('', field_type)
-    return list_type in ros_primitive_types
+    bracket_index = field_type.find('[')
+    if bracket_index < 0:
+        return False
+    else:
+        list_type = field_type[:bracket_index]
+        return list_type in ros_primitive_types
