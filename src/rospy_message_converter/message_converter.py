@@ -37,7 +37,7 @@ import re
 import base64
 import sys
 import copy
-python3 = True if sys.hexversion > 0x03000000 else False
+python3 = (sys.hexversion > 0x03000000)
 
 if python3:
     python_string_types = [str]
@@ -69,7 +69,6 @@ ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
                        'uint16', 'int32', 'uint32', 'int64', 'uint64',
                        'float32', 'float64', 'string']
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
-ros_binary_types_regexp = re.compile(r'(uint8|char)\[[^\]]*\]')
 
 list_brackets = re.compile(r'\[[^\]]*\]')
 
@@ -123,7 +122,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
     return message
 
 def _convert_to_ros_type(field_name, field_type, field_value):
-    if is_ros_binary_type(field_type, field_value):
+    if _is_ros_binary_type(field_type):
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_to_ros_time(field_type, field_value)
@@ -197,7 +196,7 @@ def convert_ros_message_to_dictionary(message):
     return dictionary
 
 def _convert_from_ros_type(field_type, field_value):
-    if is_ros_binary_type(field_type, field_value):
+    if _is_ros_binary_type(field_type):
         field_value = _convert_from_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_from_ros_time(field_type, field_value)
@@ -212,23 +211,23 @@ def _convert_from_ros_type(field_type, field_value):
 
     return field_value
 
-def is_ros_binary_type(field_type, field_value):
+def _is_ros_binary_type(field_type):
     """ Checks if the field is a binary array one, fixed size or not
 
-    is_ros_binary_type("uint8", 42)
+    _is_ros_binary_type("uint8")
     >>> False
-    is_ros_binary_type("uint8[]", [42, 18])
+    _is_ros_binary_type("uint8[]")
     >>> True
-    is_ros_binary_type("uint8[3]", [42, 18, 21]
+    _is_ros_binary_type("uint8[3]")
     >>> True
-    is_ros_binary_type("char", 42)
+    _is_ros_binary_type("char")
     >>> False
-    is_ros_binary_type("char[]", [42, 18])
+    _is_ros_binary_type("char[]")
     >>> True
-    is_ros_binary_type("char[3]", [42, 18, 21]
+    _is_ros_binary_type("char[3]")
     >>> True
     """
-    return re.search(ros_binary_types_regexp, field_type) is not None
+    return field_type.startswith('uint8[') or field_type.startswith('char[')
 
 def _convert_from_ros_binary(field_type, field_value):
     field_value = base64.standard_b64encode(field_value).decode('utf-8')
