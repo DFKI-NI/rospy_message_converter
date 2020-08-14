@@ -36,31 +36,37 @@ import rospy
 import base64
 import sys
 import copy
+import numpy as np
+
 python3 = (sys.hexversion > 0x03000000)
+
+python_list_types = [list, tuple]
 
 if python3:
     python_string_types = [str]
-    python_long_int_types = [int]
+    python_int_types = [int]
 else:
     python_string_types = [str, unicode]
-    python_long_int_types = [int, long]
-python_list_types = [list, tuple]
+    python_int_types = [int, long]
+
+python_float_types = [float]
 
 ros_to_python_type_map = {
     'bool'    : [bool],
-    'byte'    : [int],
-    'char'    : [int],
-    'float32' : [int, float],
-    'float64' : [int, float],
-    'int16'   : [int],
-    'int32'   : [int],
-    'int64'   : [int],
-    'int8'    : [int],
-    'string'  : python_string_types,
-    'uint16'  : [int],
-    'uint32'  : [int],
-    'uint64'  : python_long_int_types,
-    'uint8'   : [int]
+    'float32' : python_float_types + python_int_types + [np.float32, np.int8, np.int16, np.uint8, np.uint16],
+       # don't include int32, because conversion to float may change value: v = np.iinfo(np.int32).max; np.float32(v) != v
+    'float64' : python_float_types + python_int_types + [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
+    'int8'    : python_int_types + [np.int8],
+    'int16'   : python_int_types + [np.int8, np.int16, np.uint8],
+    'int32'   : python_int_types + [np.int8, np.int16, np.int32, np.uint8, np.uint16],
+    'int64'   : python_int_types + [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
+    'uint8'   : python_int_types + [np.uint8],
+    'uint16'  : python_int_types + [np.uint8, np.uint16],
+    'uint32'  : python_int_types + [np.uint8, np.uint16, np.uint32],
+    'uint64'  : python_int_types + [np.uint8, np.uint16, np.uint32, np.uint64],
+    'byte'    : python_int_types + [np.int8],
+    'char'    : python_int_types + [np.uint8],
+    'string'  : python_string_types
 }
 
 ros_time_types = ['time', 'duration']
