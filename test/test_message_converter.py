@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import struct
 import unittest
+import numpy as np
 import rospy
 from rospy_message_converter import message_converter
 
@@ -565,6 +566,49 @@ class TestMessageConverter(unittest.TestCase):
                                                                       'response')
         expected_res = serialize_deserialize(expected_res)
         self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_numpy_conversions(self):
+        from std_msgs.msg import Byte, Char, Float32, Float64, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64
+        numpy_numeric_types = [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64, np.float32, np.float64]
+        min_values = [np.iinfo(t).min for t in [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64]] \
+                     + [np.finfo(t).min for t in [np.float32, np.float64]]
+        max_values = [np.iinfo(t).max for t in [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64]] \
+                     + [np.finfo(t).max for t in [np.float32, np.float64]]
+        numeric_limits = {num_type: (min_val, max_val) for (num_type, min_val, max_val) in zip(numpy_numeric_types, min_values, max_values)}
+        ros_to_numpy_type_map = {
+            Float32 : [np.float32, np.int8, np.int16, np.uint8, np.uint16],
+            Float64 : [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
+            Int8    : [np.int8],
+            Int16   : [np.int8, np.int16, np.uint8],
+            Int32   : [np.int8, np.int16, np.int32, np.uint8, np.uint16],
+            Int64   : [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
+            UInt8   : [np.uint8],
+            UInt16  : [np.uint8, np.uint16],
+            UInt32  : [np.uint8, np.uint16, np.uint32],
+            UInt64  : [np.uint8, np.uint16, np.uint32, np.uint64],
+            Byte    : [np.int8],
+            Char    : [np.uint8]
+        }
+        for ros_type, valid_numpy_types in ros_to_numpy_type_map.items():
+            for numpy_type in valid_numpy_types:
+                for value in numeric_limits[numpy_type]:
+                    expected_message = ros_type(data=numpy_type(value))
+                    dictionary = {
+                        'data': numpy_type(value)
+                    }
+                    message = message_converter.convert_dictionary_to_ros_message(expected_message._type, dictionary)
+                    expected_message = serialize_deserialize(expected_message)
+                    self.assertEqual(message, expected_message)
+
+            for wrong_numpy_type in [t for t in numpy_numeric_types if t not in valid_numpy_types]:
+                for value in numeric_limits[wrong_numpy_type]:
+                    with self.assertRaises(TypeError) as context:
+                        expected_message = ros_type(data=wrong_numpy_type(value))
+                        dictionary = {
+                            'data': wrong_numpy_type(value)
+                        }
+                        message = message_converter.convert_dictionary_to_ros_message(expected_message._type, dictionary)
+                    self.assertTrue("Field 'data' has wrong type" in context.exception.args[0])
 
 
 def serialize_deserialize(message):
