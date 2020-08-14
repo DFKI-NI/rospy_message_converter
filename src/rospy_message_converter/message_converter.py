@@ -196,12 +196,12 @@ def convert_ros_message_to_dictionary(message):
     return dictionary
 
 def _convert_from_ros_type(field_type, field_value):
-    if _is_ros_binary_type(field_type):
-        field_value = _convert_from_ros_binary(field_type, field_value)
+    if field_type in ros_primitive_types:
+        field_value = field_value
     elif field_type in ros_time_types:
         field_value = _convert_from_ros_time(field_type, field_value)
-    elif field_type in ros_primitive_types:
-        field_value = field_value
+    elif _is_ros_binary_type(field_type):
+        field_value = _convert_from_ros_binary(field_type, field_value)
     elif _is_field_type_a_primitive_array(field_type):
         field_value = list(field_value)
     elif _is_field_type_an_array(field_type):
