@@ -33,7 +33,6 @@
 
 import roslib.message
 import rospy
-import re
 import base64
 import sys
 import copy
@@ -69,8 +68,6 @@ ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
                        'uint16', 'int32', 'uint32', 'int64', 'uint64',
                        'float32', 'float64', 'string']
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
-
-list_brackets = re.compile(r'\[[^\]]*\]')
 
 def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True, check_missing_fields=False):
     """
@@ -176,7 +173,8 @@ def _convert_to_ros_primitive(field_type, field_value):
     return field_value
 
 def _convert_to_ros_array(field_name, field_type, list_value):
-    list_type = list_brackets.sub('', field_type)
+    # use index to raise ValueError if '[' not present
+    list_type = field_type[:field_type.index('[')]
     return [_convert_to_ros_type(field_name, list_type, value) for value in list_value]
 
 def convert_ros_message_to_dictionary(message):
@@ -241,14 +239,15 @@ def _convert_from_ros_time(field_type, field_value):
     return field_value
 
 def _convert_from_ros_array(field_type, field_value):
-    list_type = list_brackets.sub('', field_type)
+    # use index to raise ValueError if '[' not present
+    list_type = field_type[:field_type.index('[')]
     return [_convert_from_ros_type(list_type, value) for value in field_value]
 
 def _get_message_fields(message):
     return zip(message.__slots__, message._slot_types)
 
 def _is_field_type_an_array(field_type):
-    return list_brackets.search(field_type) is not None
+    return field_type.find('[') >= 0
 
 def _is_field_type_a_primitive_array(field_type):
     bracket_index = field_type.find('[')
