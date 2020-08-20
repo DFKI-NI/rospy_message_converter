@@ -1,6 +1,31 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Add check_types parameter to convert_dictionary_to_ros_message (`#42 <https://github.com/uos/rospy_message_converter/issues/42>`_)
+* Allow numpy numeric types in numeric fields  (`#41 <https://github.com/uos/rospy_message_converter/issues/41>`_)
+  Fixes `#39 <https://github.com/uos/rospy_message_converter/issues/39>`_.
+* perf: Remove remaining regexes
+  This is only a small speedup of about 1.03x.
+* perf: Avoid regex in _is_field_type_a_primitive_array
+  This makes the function almost 3x faster.
+* perf: Reorder type checks
+  Perform the cheaper checks first. This results in a speedup of about
+  1.2x.
+* perf: Avoid regex in is_ros_binary_type
+  This makes is_ros_binary_type almost 5x faster and as a result the whole
+  convert_ros_message_to_dictionary function almost 2x faster.
+* Compare types, not type names; improve error message
+  Old error message:
+  TypeError: Wrong type: '1.0' must be float64
+  New error message:
+  TypeError: Field 'x' has wrong type <type 'numpy.float64'> (valid types: [<type 'int'>, <type 'float'>])
+* Remove unused python_to_ros_type_map
+* added test for convert_dictionary_to_ros_message with int8 array
+* python 3 fix for _convert_to_ros_binary
+* Contributors: Martin Günther, Steffen Rühl
+
 0.5.2 (2020-07-09)
 ------------------
 * Check for wrong field types when converting from dict to ros msg
