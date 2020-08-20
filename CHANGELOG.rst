@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.3 (2020-08-20)
+------------------
 * Add check_types parameter to convert_dictionary_to_ros_message (`#42 <https://github.com/uos/rospy_message_converter/issues/42>`_)
 * Allow numpy numeric types in numeric fields  (`#41 <https://github.com/uos/rospy_message_converter/issues/41>`_)
   Fixes `#39 <https://github.com/uos/rospy_message_converter/issues/39>`_.

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>rospy_message_converter</name>
-  <version>0.5.2</version>
+  <version>0.5.3</version>
   <description>Converts between Python dictionaries and JSON to rospy messages.</description>
   <maintainer email="martin.guenther@dfki.de">Martin Günther</maintainer>
   <license>BSD</license>
