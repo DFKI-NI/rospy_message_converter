@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.4 (2020-10-13)
+------------------
 * Avoid numpy dependency
 * Contributors: Martin Günther, betaboon
 
