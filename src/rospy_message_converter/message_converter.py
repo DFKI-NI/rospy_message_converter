@@ -53,19 +53,19 @@ python_float_types = [float]
 
 ros_to_python_type_map = {
     'bool'    : [bool],
-    'float32' : python_float_types + python_int_types,
-    'float64' : python_float_types + python_int_types,
-    'int8'    : python_int_types,
-    'int16'   : python_int_types,
-    'int32'   : python_int_types,
-    'int64'   : python_int_types,
-    'uint8'   : python_int_types,
-    'uint16'  : python_int_types,
-    'uint32'  : python_int_types,
-    'uint64'  : python_int_types,
-    'byte'    : python_int_types,
-    'char'    : python_int_types,
-    'string'  : python_string_types
+    'float32' : copy.deepcopy(python_float_types + python_int_types),
+    'float64' : copy.deepcopy(python_float_types + python_int_types),
+    'int8'    : copy.deepcopy(python_int_types),
+    'int16'   : copy.deepcopy(python_int_types),
+    'int32'   : copy.deepcopy(python_int_types),
+    'int64'   : copy.deepcopy(python_int_types),
+    'uint8'   : copy.deepcopy(python_int_types),
+    'uint16'  : copy.deepcopy(python_int_types),
+    'uint32'  : copy.deepcopy(python_int_types),
+    'uint64'  : copy.deepcopy(python_int_types),
+    'byte'    : copy.deepcopy(python_int_types),
+    'char'    : copy.deepcopy(python_int_types),
+    'string'  : copy.deepcopy(python_string_types)
 }
 
 try:
