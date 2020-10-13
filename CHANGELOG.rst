@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Avoid numpy dependency
+* Contributors: Martin Günther, betaboon
+
 0.5.3 (2020-08-20)
 ------------------
 * Add check_types parameter to convert_dictionary_to_ros_message (`#42 <https://github.com/uos/rospy_message_converter/issues/42>`_)
