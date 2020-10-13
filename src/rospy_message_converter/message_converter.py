@@ -36,7 +36,7 @@ import rospy
 import base64
 import sys
 import copy
-import numpy as np
+import collections
 
 python3 = (sys.hexversion > 0x03000000)
 
@@ -53,21 +53,47 @@ python_float_types = [float]
 
 ros_to_python_type_map = {
     'bool'    : [bool],
-    'float32' : python_float_types + python_int_types + [np.float32, np.int8, np.int16, np.uint8, np.uint16],
-       # don't include int32, because conversion to float may change value: v = np.iinfo(np.int32).max; np.float32(v) != v
-    'float64' : python_float_types + python_int_types + [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
-    'int8'    : python_int_types + [np.int8],
-    'int16'   : python_int_types + [np.int8, np.int16, np.uint8],
-    'int32'   : python_int_types + [np.int8, np.int16, np.int32, np.uint8, np.uint16],
-    'int64'   : python_int_types + [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
-    'uint8'   : python_int_types + [np.uint8],
-    'uint16'  : python_int_types + [np.uint8, np.uint16],
-    'uint32'  : python_int_types + [np.uint8, np.uint16, np.uint32],
-    'uint64'  : python_int_types + [np.uint8, np.uint16, np.uint32, np.uint64],
-    'byte'    : python_int_types + [np.int8],
-    'char'    : python_int_types + [np.uint8],
-    'string'  : python_string_types
+    'float32' : copy.deepcopy(python_float_types + python_int_types),
+    'float64' : copy.deepcopy(python_float_types + python_int_types),
+    'int8'    : copy.deepcopy(python_int_types),
+    'int16'   : copy.deepcopy(python_int_types),
+    'int32'   : copy.deepcopy(python_int_types),
+    'int64'   : copy.deepcopy(python_int_types),
+    'uint8'   : copy.deepcopy(python_int_types),
+    'uint16'  : copy.deepcopy(python_int_types),
+    'uint32'  : copy.deepcopy(python_int_types),
+    'uint64'  : copy.deepcopy(python_int_types),
+    'byte'    : copy.deepcopy(python_int_types),
+    'char'    : copy.deepcopy(python_int_types),
+    'string'  : copy.deepcopy(python_string_types)
 }
+
+try:
+    import numpy as np
+    _ros_to_numpy_type_map = {
+        'float32' : [np.float32, np.int8, np.int16, np.uint8, np.uint16],
+        # don't include int32, because conversion to float may change value: v = np.iinfo(np.int32).max; np.float32(v) != v
+        'float64' : [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
+        'int8'    : [np.int8],
+        'int16'   : [np.int8, np.int16, np.uint8],
+        'int32'   : [np.int8, np.int16, np.int32, np.uint8, np.uint16],
+        'int64'   : [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
+        'uint8'   : [np.uint8],
+        'uint16'  : [np.uint8, np.uint16],
+        'uint32'  : [np.uint8, np.uint16, np.uint32],
+        'uint64'  : [np.uint8, np.uint16, np.uint32, np.uint64],
+        'byte'    : [np.int8],
+        'char'    : [np.uint8],
+    }
+
+    # merge type_maps
+    merged = collections.defaultdict(list, ros_to_python_type_map)
+    for k, v in _ros_to_numpy_type_map.items():
+        merged[k].extend(v)
+    ros_to_python_type_map = dict(merged)
+except ImportError:
+    pass
+
 
 ros_time_types = ['time', 'duration']
 ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
