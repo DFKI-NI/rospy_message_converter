@@ -243,11 +243,45 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
-    def test_dictionary_with_uint8_array(self):
+    def test_dictionary_with_uint8_array_str(self):
+        from rospy_message_converter.msg import Uint8ArrayTestMessage
+        from base64 import standard_b64encode
+        expected_message = Uint8ArrayTestMessage(data='abcd')
+        dictionary = {'data': standard_b64encode(expected_message.data)}
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_uint8_array_list(self):
+        """
+        The correct type (= output of serialize_deserialize) of a uint8[]
+        field is `str`, but let's test that it also works with lists of int.
+        """
         from rospy_message_converter.msg import Uint8ArrayTestMessage
         expected_message = Uint8ArrayTestMessage(data=[1, 2, 3, 4])
         dictionary = {'data': expected_message.data}
         message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_3uint8_array_str(self):
+        from rospy_message_converter.msg import Uint8Array3TestMessage
+        from base64 import standard_b64encode
+        expected_message = Uint8Array3TestMessage(data='abc')
+        dictionary = {'data': standard_b64encode(expected_message.data)}
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8Array3TestMessage', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_3uint8_array_list(self):
+        """
+        The correct type (= output of serialize_deserialize) of a uint8[3]
+        field is `str`, but let's test that it also works with lists of int.
+        """
+        from rospy_message_converter.msg import Uint8Array3TestMessage
+        expected_message = Uint8Array3TestMessage(data=[97, 98, 99])
+        dictionary = {'data': expected_message.data}
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8Array3TestMessage', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
