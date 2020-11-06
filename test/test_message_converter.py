@@ -3,7 +3,9 @@ import struct
 import unittest
 import numpy as np
 import rospy
+from rospy.exceptions import ROSInitException
 from rospy_message_converter import message_converter
+
 
 class TestMessageConverter(unittest.TestCase):
 
@@ -375,7 +377,6 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_empty_additional_args_strict_mode(self):
-        from std_msgs.msg import Empty
         dictionary = {"additional_args": "should raise value error"}
         with self.assertRaises(ValueError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/Empty', dictionary)
@@ -559,6 +560,14 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_time_now(self):
+        dictionary = {
+            'data': 'now'
+        }
+        with self.assertRaises(ROSInitException) as context:
+            message_converter.convert_dictionary_to_ros_message('std_msgs/Time', dictionary)
+        self.assertEqual('time is not initialized. Have you called init_node()?', context.exception.args[0])
+
     def test_dictionary_with_child_message(self):
         from std_msgs.msg import Float64MultiArray, MultiArrayLayout, MultiArrayDimension
         expected_message = Float64MultiArray(
@@ -600,7 +609,7 @@ class TestMessageConverter(unittest.TestCase):
                           {'invalid_field': 1})
 
     def test_dictionary_with_empty_service(self):
-        from std_srvs.srv import Empty, EmptyRequest, EmptyResponse
+        from std_srvs.srv import EmptyRequest, EmptyResponse
         expected_req = EmptyRequest()
         expected_res = EmptyResponse()
         dictionary_req = {}
@@ -615,7 +624,7 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_res)
 
     def test_dictionary_with_setbool_service(self):
-        from std_srvs.srv import SetBool, SetBoolRequest, SetBoolResponse
+        from std_srvs.srv import SetBoolRequest, SetBoolResponse
         expected_req = SetBoolRequest(data=True)
         expected_res = SetBoolResponse(success=True, message='Success!')
         dictionary_req = { 'data': True }
@@ -630,7 +639,7 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_res)
 
     def test_dictionary_with_trigger_service(self):
-        from std_srvs.srv import Trigger, TriggerRequest, TriggerResponse
+        from std_srvs.srv import TriggerRequest, TriggerResponse
         expected_req = TriggerRequest()
         expected_res = TriggerResponse(success=True, message='Success!')
         dictionary_req = {}
@@ -643,6 +652,11 @@ class TestMessageConverter(unittest.TestCase):
                                                                       'response')
         expected_res = serialize_deserialize(expected_res)
         self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_invalid_kind(self):
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('std_msgs/Empty', {}, kind='invalid')
+        self.assertEqual('Unknown kind "invalid".', context.exception.args[0])
 
     def test_dictionary_with_numpy_conversions(self):
         from std_msgs.msg import Byte, Char, Float32, Float64, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64
@@ -684,7 +698,7 @@ class TestMessageConverter(unittest.TestCase):
                         dictionary = {
                             'data': wrong_numpy_type(value)
                         }
-                        message = message_converter.convert_dictionary_to_ros_message(expected_message._type, dictionary)
+                        message_converter.convert_dictionary_to_ros_message(expected_message._type, dictionary)
                     self.assertTrue("Field 'data' has wrong type" in context.exception.args[0])
 
 
