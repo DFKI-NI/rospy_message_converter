@@ -175,10 +175,8 @@ def _convert_to_ros_type(field_name, field_type, field_value, check_types=True):
 def _convert_to_ros_binary(field_type, field_value):
     if type(field_value) in python_string_types:
         binary_value_as_string = base64.standard_b64decode(field_value)
-    elif python3:
-        binary_value_as_string = bytes(bytearray(field_value))
     else:
-        binary_value_as_string = str(bytearray(field_value))
+        binary_value_as_string = bytes(bytearray(field_value))
     return binary_value_as_string
 
 def _convert_to_ros_time(field_type, field_value):
