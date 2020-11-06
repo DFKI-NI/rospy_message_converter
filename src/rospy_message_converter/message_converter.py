@@ -43,7 +43,7 @@ python3 = (sys.hexversion > 0x03000000)
 python_list_types = [list, tuple]
 
 if python3:
-    python_string_types = [str]
+    python_string_types = [str, bytes]
     python_int_types = [int]
 else:
     python_string_types = [str, unicode]
