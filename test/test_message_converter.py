@@ -243,41 +243,84 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
-    def test_dictionary_with_uint8_array_str(self):
+    def test_dictionary_with_uint8_array_bytes(self):
+        """
+        rospy treats uint8[] data as `bytes`, which is the Python representation for byte data. In Python 2, this is
+        the same as `str`. The `bytes` value must be base64-encoded.
+        """
         from rospy_message_converter.msg import Uint8ArrayTestMessage
         from base64 import standard_b64encode
-        expected_message = Uint8ArrayTestMessage(data='abcd')
-        dictionary = {'data': standard_b64encode(expected_message.data)}
-        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage', dictionary)
+        expected_message = Uint8ArrayTestMessage(data=bytes(bytearray([97, 98, 99])))
+        dictionary = {'data': standard_b64encode(expected_message.data)}   # base64 encoding
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                      dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_uint8_array_list(self):
         """
-        The correct type (= output of serialize_deserialize) of a uint8[]
-        field is `str`, but let's test that it also works with lists of int.
+        Even though rospy treats uint8[] data as `bytes`, rospy_message_converter also handles lists of int. In that
+        case, the input data must *not* be base64-encoded.
         """
         from rospy_message_converter.msg import Uint8ArrayTestMessage
         expected_message = Uint8ArrayTestMessage(data=[1, 2, 3, 4])
-        dictionary = {'data': expected_message.data}
-        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage', dictionary)
+        dictionary = {'data': expected_message.data}   # no base64 encoding
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                      dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
-    def test_dictionary_with_3uint8_array_str(self):
+    def test_dictionary_with_uint8_array_list_invalid(self):
+        dictionary = {'data': [1, 2, 3, 4000]}
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                dictionary)
+        self.assertEqual('byte must be in range(0, 256)', context.exception.args[0])
+
+    def test_dictionary_with_uint8_array_bytes_unencoded(self):
+        """
+        If the value of a uint8[] field has type `bytes`, rospy_message_converter expects that data to be
+        base64-encoded and runs standard_b64decode on it. This test documents what happens if the value is
+        not base64-encoded. In the future, it might be nice to throw an error instead of silently producing
+        garbage output.
+        """
+        from rospy_message_converter.msg import Uint8ArrayTestMessage
+        import binascii
+
+        # this raises a TypeError, because:
+        # * standard_b64decode removes all characters that are not in the standard alphabet ([A-Za-Z0-9+/])
+        # * this only leaves 97 (= 'a')
+        # * the length of a base64 string must be a multiple of 4 characters (if necessary, padded at the end with '=')
+        # * since the length of 'a' is not a multiple of 4, a TypeError is thrown
+        dictionary = {'data': bytes(bytearray([1, 2, 97, 4]))}
+        with self.assertRaises((TypeError, binascii.Error)) as context:
+            message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                dictionary)
+        if type(context.exception) == TypeError:  # python2
+            self.assertEqual('Incorrect padding', context.exception.args[0].args[0])
+        else:  # python3
+            self.assertEqual(
+                'Invalid base64-encoded string: number of data characters (1) cannot be 1 more than a multiple of 4',
+                context.exception.args[0])
+
+        # if the dictionary contains a multiple of 4 characters from the standard alphabet, no TypeError is thrown
+        # (but the result is garbage).
+        dictionary = {'data': bytes(bytearray([1, 97, 97, 2, 3, 97, 4, 97]))}
+        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                      dictionary)
+        expected_message = serialize_deserialize(Uint8ArrayTestMessage(data=bytes(bytearray([105, 166, 154]))))
+        self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_3uint8_array_bytes(self):
         from rospy_message_converter.msg import Uint8Array3TestMessage
         from base64 import standard_b64encode
-        expected_message = Uint8Array3TestMessage(data='abc')
+        expected_message = Uint8Array3TestMessage(data=bytes(bytearray([97, 98, 99])))
         dictionary = {'data': standard_b64encode(expected_message.data)}
         message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8Array3TestMessage', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_3uint8_array_list(self):
-        """
-        The correct type (= output of serialize_deserialize) of a uint8[3]
-        field is `str`, but let's test that it also works with lists of int.
-        """
         from rospy_message_converter.msg import Uint8Array3TestMessage
         expected_message = Uint8Array3TestMessage(data=[97, 98, 99])
         dictionary = {'data': expected_message.data}
