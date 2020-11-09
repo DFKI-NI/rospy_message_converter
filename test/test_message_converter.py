@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-import struct
-import unittest
 import numpy as np
+import struct
+import sys
+import unittest
+
 import rospy
 from rospy.exceptions import ROSInitException
 from rospy_message_converter import message_converter
 
+python3 = (sys.hexversion > 0x03000000)
 
 class TestMessageConverter(unittest.TestCase):
 
@@ -283,8 +286,7 @@ class TestMessageConverter(unittest.TestCase):
         """
         If the value of a uint8[] field has type `bytes`, rospy_message_converter expects that data to be
         base64-encoded and runs b64decode on it. This test documents what happens if the value is
-        not base64-encoded. In the future, it might be nice to throw an error instead of silently producing
-        garbage output.
+        not base64-encoded.
         """
         from rospy_message_converter.msg import Uint8ArrayTestMessage
         import binascii
@@ -302,16 +304,22 @@ class TestMessageConverter(unittest.TestCase):
             error_msg = context.exception.args[0].args[0]
         else:  # python3
             error_msg = context.exception.args[0]
-        self.assertIn(error_msg, ['Incorrect padding',
-                                  'Invalid base64-encoded string: number of data characters (1) cannot be 1 more than a multiple of 4'])
+        self.assertIn(error_msg, ['Incorrect padding', 'Non-base64 digit found'])
 
-        # if the dictionary contains a multiple of 4 characters from the standard alphabet, no TypeError is thrown
-        # (but the result is garbage).
         dictionary = {'data': bytes(bytearray([1, 97, 97, 2, 3, 97, 4, 97]))}
-        message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
-                                                                      dictionary)
-        expected_message = serialize_deserialize(Uint8ArrayTestMessage(data=bytes(bytearray([105, 166, 154]))))
-        self.assertEqual(message, expected_message)
+        if python3:
+            # On python3, we validate the input, so an error is raised.
+            with self.assertRaises(binascii.Error) as context:
+                message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                    dictionary)
+            self.assertEqual('Non-base64 digit found', context.exception.args[0])
+        else:
+            # if the dictionary contains a multiple of 4 characters from the standard alphabet, no error is raised
+            # (but the result is garbage).
+            message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
+                                                                          dictionary)
+            expected_message = serialize_deserialize(Uint8ArrayTestMessage(data=bytes(bytearray([105, 166, 154]))))
+            self.assertEqual(message, expected_message)
 
     def test_dictionary_with_3uint8_array_bytes(self):
         from rospy_message_converter.msg import Uint8Array3TestMessage

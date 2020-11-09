@@ -174,7 +174,15 @@ def _convert_to_ros_type(field_name, field_type, field_value, check_types=True):
 
 def _convert_to_ros_binary(field_type, field_value):
     if type(field_value) in python_string_types:
-        binary_value_as_string = base64.b64decode(field_value)
+        if python3:
+            # base64 in python3 added the `validate` arg:
+            # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the input,
+            # a binascii.Error will be raised.
+            binary_value_as_string = base64.b64decode(field_value, validate=True)
+        else:
+            # base64 in python2 doesn't have the `validate` arg: characters that are not in the base-64 alphabet are
+            # silently discarded, resulting in garbage output.
+            binary_value_as_string = base64.b64decode(field_value)
     else:
         binary_value_as_string = bytes(bytearray(field_value))
     return binary_value_as_string
