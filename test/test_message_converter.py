@@ -299,11 +299,11 @@ class TestMessageConverter(unittest.TestCase):
             message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
                                                                 dictionary)
         if type(context.exception) == TypeError:  # python2
-            self.assertEqual('Incorrect padding', context.exception.args[0].args[0])
+            error_msg = context.exception.args[0].args[0]
         else:  # python3
-            self.assertEqual(
-                'Invalid base64-encoded string: number of data characters (1) cannot be 1 more than a multiple of 4',
-                context.exception.args[0])
+            error_msg = context.exception.args[0]
+        self.assertIn(error_msg, ['Incorrect padding',
+                                  'Invalid base64-encoded string: number of data characters (1) cannot be 1 more than a multiple of 4'])
 
         # if the dictionary contains a multiple of 4 characters from the standard alphabet, no TypeError is thrown
         # (but the result is garbage).
