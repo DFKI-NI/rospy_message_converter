@@ -194,6 +194,17 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
+    def test_ros_message_with_unicode(self):
+        """
+        Test that strings are encoded as utf8
+        """
+        from std_msgs.msg import String
+        expected_dictionary = { 'data': u'Hello \u00dcnicode' }
+        message = String(data=expected_dictionary['data'])
+        message = serialize_deserialize(message)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message)
+        self.assertEqual(dictionary, expected_dictionary)
+
     def test_ros_message_with_time(self):
         from std_msgs.msg import Time
         from time import time
@@ -546,8 +557,8 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_unicode(self):
         from std_msgs.msg import String
-        expected_message = String(data = 'Hello')
-        dictionary = { 'data': u'Hello' }
+        expected_message = String(data = u'Hello \u00dcnicode')
+        dictionary = { 'data': expected_message.data }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/String', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message.data,expected_message.data)
