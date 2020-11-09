@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Decode strings from ROS messages as UTF8
+  This makes the python2 behavior equal to python3.
+* python3 only: Validate base64 strings
+* Add bytes to python3 string types
+  This means that `bytes` will now also be base64-decoded, which fixes the following tests on python3:
+  * test_dictionary_with_uint8_array_bytes
+  * test_dictionary_with_uint8_array_bytes_unencoded
+  * test_dictionary_with_3uint8_array_bytes
+  On python2, `bytes` is just an alias for `str`, which is why it worked
+  without this.
+* Fix and add tests
+* Contributors: Martin Günther
+
 0.5.4 (2020-10-13)
 ------------------
 * Avoid numpy dependency
