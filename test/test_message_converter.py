@@ -117,22 +117,22 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_uint8_array(self):
         from rospy_message_converter.msg import Uint8ArrayTestMessage
-        from base64 import standard_b64encode
+        from base64 import b64encode
         expected_data = [97, 98, 99, 100]
         message = Uint8ArrayTestMessage(data=expected_data)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        expected_data = standard_b64encode(bytearray(expected_data)).decode('utf-8')
+        expected_data = b64encode(bytearray(expected_data)).decode('utf-8')
         self.assertEqual(dictionary["data"], expected_data)
 
     def test_ros_message_with_3uint8_array(self):
         from rospy_message_converter.msg import Uint8Array3TestMessage
-        from base64 import standard_b64encode
+        from base64 import b64encode
         expected_data = [97, 98, 99]
         message = Uint8Array3TestMessage(data=expected_data)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        expected_data = standard_b64encode(bytearray(expected_data)).decode('utf-8')
+        expected_data = b64encode(bytearray(expected_data)).decode('utf-8')
         self.assertEqual(dictionary["data"], expected_data)
 
     def test_ros_message_with_int16(self):
@@ -251,9 +251,9 @@ class TestMessageConverter(unittest.TestCase):
         the same as `str`. The `bytes` value must be base64-encoded.
         """
         from rospy_message_converter.msg import Uint8ArrayTestMessage
-        from base64 import standard_b64encode
+        from base64 import b64encode
         expected_message = Uint8ArrayTestMessage(data=bytes(bytearray([97, 98, 99])))
-        dictionary = {'data': standard_b64encode(expected_message.data)}   # base64 encoding
+        dictionary = {'data': b64encode(expected_message.data)}   # base64 encoding
         message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8ArrayTestMessage',
                                                                       dictionary)
         expected_message = serialize_deserialize(expected_message)
@@ -282,7 +282,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_uint8_array_bytes_unencoded(self):
         """
         If the value of a uint8[] field has type `bytes`, rospy_message_converter expects that data to be
-        base64-encoded and runs standard_b64decode on it. This test documents what happens if the value is
+        base64-encoded and runs b64decode on it. This test documents what happens if the value is
         not base64-encoded. In the future, it might be nice to throw an error instead of silently producing
         garbage output.
         """
@@ -290,7 +290,7 @@ class TestMessageConverter(unittest.TestCase):
         import binascii
 
         # this raises a TypeError, because:
-        # * standard_b64decode removes all characters that are not in the standard alphabet ([A-Za-Z0-9+/])
+        # * b64decode removes all characters that are not in the standard alphabet ([A-Za-Z0-9+/])
         # * this only leaves 97 (= 'a')
         # * the length of a base64 string must be a multiple of 4 characters (if necessary, padded at the end with '=')
         # * since the length of 'a' is not a multiple of 4, a TypeError is thrown
@@ -315,9 +315,9 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_3uint8_array_bytes(self):
         from rospy_message_converter.msg import Uint8Array3TestMessage
-        from base64 import standard_b64encode
+        from base64 import b64encode
         expected_message = Uint8Array3TestMessage(data=bytes(bytearray([97, 98, 99])))
-        dictionary = {'data': standard_b64encode(expected_message.data)}
+        dictionary = {'data': b64encode(expected_message.data)}
         message = message_converter.convert_dictionary_to_ros_message('rospy_message_converter/Uint8Array3TestMessage', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
