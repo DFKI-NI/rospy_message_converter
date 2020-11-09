@@ -215,7 +215,7 @@ def _convert_to_ros_array(field_name, field_type, list_value, check_types=True):
     list_type = field_type[:field_type.index('[')]
     return [_convert_to_ros_type(field_name, list_type, value, check_types) for value in list_value]
 
-def convert_ros_message_to_dictionary(message):
+def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
     """
     Takes in a ROS message and returns a Python dictionary.
 
@@ -227,17 +227,23 @@ def convert_ros_message_to_dictionary(message):
     message_fields = _get_message_fields(message)
     for field_name, field_type in message_fields:
         field_value = getattr(message, field_name)
-        dictionary[field_name] = _convert_from_ros_type(field_type, field_value)
+        dictionary[field_name] = _convert_from_ros_type(field_type, field_value, binary_array_as_bytes)
 
     return dictionary
 
-def _convert_from_ros_type(field_type, field_value):
+
+def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
     if field_type in ros_primitive_types:
         field_value = _convert_from_ros_primitive(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_from_ros_time(field_type, field_value)
     elif _is_ros_binary_type(field_type):
-        field_value = _convert_from_ros_binary(field_type, field_value)
+        if binary_array_as_bytes:
+            field_value = _convert_from_ros_binary(field_type, field_value)
+        elif type(field_value) == str:
+            field_value = [ord(v) for v in field_value]
+        else:
+            field_value = list(field_value)
     elif _is_field_type_a_primitive_array(field_type):
         field_value = list(field_value)
     elif _is_field_type_an_array(field_type):
