@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.5 (2020-11-09)
+------------------
 * Decode strings from ROS messages as UTF8
   This makes the python2 behavior equal to python3.
 * python3 only: Validate base64 strings
