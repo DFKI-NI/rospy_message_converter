@@ -233,7 +233,7 @@ def convert_ros_message_to_dictionary(message):
 
 def _convert_from_ros_type(field_type, field_value):
     if field_type in ros_primitive_types:
-        field_value = field_value
+        field_value = _convert_from_ros_primitive(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_from_ros_time(field_type, field_value)
     elif _is_ros_binary_type(field_type):
@@ -274,6 +274,12 @@ def _convert_from_ros_time(field_type, field_value):
         'secs'  : field_value.secs,
         'nsecs' : field_value.nsecs
     }
+    return field_value
+
+def _convert_from_ros_primitive(field_type, field_value):
+    # std_msgs/msg/_String.py always calls decode() on python3, so don't do it here
+    if field_type == "string" and not python3:
+        field_value = field_value.decode('utf-8')
     return field_value
 
 def _convert_from_ros_array(field_type, field_value):
