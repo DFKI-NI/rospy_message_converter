@@ -106,14 +106,16 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
     Takes in the message type and a Python dictionary and returns a ROS message.
 
     Example:
-        message_type = "std_msgs/String"
-        dict_message = { "data": "Hello, Robot" }
-        ros_message = convert_dictionary_to_ros_message(message_type, dict_message)
+        >>> msg_type = "std_msgs/String"
+        >>> dict_msg = { "data": "Hello, Robot" }
+        >>> convert_dictionary_to_ros_message(msg_type, dict_msg)
+        data: "Hello, Robot"
 
-        message_type = "std_srvs/SetBool"
-        dict_message = { "data": True }
-        kind = "request"
-        ros_message = convert_dictionary_to_ros_message(message_type, dict_message, kind)
+        >>> msg_type = "std_srvs/SetBool"
+        >>> dict_msg = { "data": True }
+        >>> kind = "request"
+        >>> convert_dictionary_to_ros_message(msg_type, dict_msg, kind)
+        data: True
     """
     if kind == 'message':
         message_class = roslib.message.get_message_class(message_type)
@@ -220,8 +222,10 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
     Takes in a ROS message and returns a Python dictionary.
 
     Example:
-        ros_message = std_msgs.msg.String(data="Hello, Robot")
-        dict_message = convert_ros_message_to_dictionary(ros_message)
+        >>> import std_msgs.msg
+        >>> ros_message = std_msgs.msg.UInt32(data=42)
+        >>> convert_ros_message_to_dictionary(ros_message)
+        {'data': 42}
     """
     dictionary = {}
     message_fields = _get_message_fields(message)
@@ -256,18 +260,18 @@ def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
 def _is_ros_binary_type(field_type):
     """ Checks if the field is a binary array one, fixed size or not
 
-    _is_ros_binary_type("uint8")
-    >>> False
-    _is_ros_binary_type("uint8[]")
-    >>> True
-    _is_ros_binary_type("uint8[3]")
-    >>> True
-    _is_ros_binary_type("char")
-    >>> False
-    _is_ros_binary_type("char[]")
-    >>> True
-    _is_ros_binary_type("char[3]")
-    >>> True
+    >>> _is_ros_binary_type("uint8")
+    False
+    >>> _is_ros_binary_type("uint8[]")
+    True
+    >>> _is_ros_binary_type("uint8[3]")
+    True
+    >>> _is_ros_binary_type("char")
+    False
+    >>> _is_ros_binary_type("char[]")
+    True
+    >>> _is_ros_binary_type("char[3]")
+    True
     """
     return field_type.startswith('uint8[') or field_type.startswith('char[')
 
@@ -306,3 +310,8 @@ def _is_field_type_a_primitive_array(field_type):
     else:
         list_type = field_type[:bracket_index]
         return list_type in ros_primitive_types
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
