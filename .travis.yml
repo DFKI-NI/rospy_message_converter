@@ -5,12 +5,12 @@ services:
 
 env:
   matrix:
-    - CI_ROS_DISTRO="kinetic"
-    - CI_ROS_DISTRO="melodic"
-    - CI_ROS_DISTRO="noetic"
+    - CI_ROS_DISTRO="kinetic" PYTHON="python"
+    - CI_ROS_DISTRO="melodic" PYTHON="python"
+    - CI_ROS_DISTRO="noetic"  PYTHON="python3"
 
 install:
   - docker build -t rospy_message_converter_$CI_ROS_DISTRO -f Dockerfile-$CI_ROS_DISTRO .
 
 script:
-  - docker run rospy_message_converter_$CI_ROS_DISTRO /bin/bash -c "source devel/setup.bash && CTEST_OUTPUT_ON_FAILURE=1 catkin_make test"
+  - docker run rospy_message_converter_$CI_ROS_DISTRO /bin/bash -c "source devel/setup.bash && CTEST_OUTPUT_ON_FAILURE=1 catkin_make test && roscd rospy_message_converter && $PYTHON src/rospy_message_converter/json_message_converter.py && $PYTHON src/rospy_message_converter/message_converter.py"
