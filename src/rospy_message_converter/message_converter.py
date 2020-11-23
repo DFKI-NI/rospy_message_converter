@@ -251,9 +251,9 @@ def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
     elif _is_field_type_a_primitive_array(field_type):
         field_value = list(field_value)
     elif _is_field_type_an_array(field_type):
-        field_value = _convert_from_ros_array(field_type, field_value)
+        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
     else:
-        field_value = convert_ros_message_to_dictionary(field_value)
+        field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
 
     return field_value
 
@@ -292,10 +292,10 @@ def _convert_from_ros_primitive(field_type, field_value):
         field_value = field_value.decode('utf-8')
     return field_value
 
-def _convert_from_ros_array(field_type, field_value):
+def _convert_from_ros_array(field_type, field_value, binary_array_as_bytes=True):
     # use index to raise ValueError if '[' not present
     list_type = field_type[:field_type.index('[')]
-    return [_convert_from_ros_type(list_type, value) for value in field_value]
+    return [_convert_from_ros_type(list_type, value, binary_array_as_bytes) for value in field_value]
 
 def _get_message_fields(message):
     return zip(message.__slots__, message._slot_types)
