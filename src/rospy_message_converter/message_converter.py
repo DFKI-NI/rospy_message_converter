@@ -170,7 +170,7 @@ def _convert_to_ros_type(field_name, field_type, field_value, check_types=True):
     elif _is_field_type_an_array(field_type):
         field_value = _convert_to_ros_array(field_name, field_type, field_value, check_types)
     else:
-        field_value = convert_dictionary_to_ros_message(field_type, field_value, check_types)
+        field_value = convert_dictionary_to_ros_message(field_type, field_value, check_types=check_types)
 
     return field_value
 
