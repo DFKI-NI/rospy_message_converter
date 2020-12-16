@@ -154,6 +154,15 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes=False)
         self.assertEqual(dictionary["arrays"][0]["data"], expected_data)
 
+    def test_ros_message_with_nested_uint8_array(self):
+        from rospy_message_converter.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
+        from base64 import b64encode
+        expected_data = bytes(bytearray([97, 98, 99]))
+        message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
+        message = serialize_deserialize(message)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message)
+        self.assertEqual(dictionary["arrays"][0]["data"], b64encode(expected_data).decode('utf-8'))
+
     def test_ros_message_with_int16(self):
         from std_msgs.msg import Int16
         expected_dictionary = { 'data': -0x7FFF }
