@@ -1,0 +1,6 @@
+# service with nested types for testing purposes
+NestedUint8ArrayTestMessage input
+
+---
+
+NestedUint8ArrayTestMessage output
