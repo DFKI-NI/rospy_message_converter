@@ -468,6 +468,28 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
+    def test_dictionary_with_nested_additional_args_strict_mode(self):
+        from base64 import b64encode
+        expected_data = bytes(bytearray([97, 98, 99]))
+        dictionary = {"arrays": [{"data": b64encode(expected_data), "additional_args": "should raise value error"}]}
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('rospy_message_converter/NestedUint8ArrayTestMessage',
+                                                                dictionary)
+        self.assertEqual(
+            'ROS message type "rospy_message_converter/Uint8ArrayTestMessage" has no field named "additional_args"',
+            context.exception.args[0])
+
+    def test_dictionary_with_nested_additional_args_forgiving(self):
+        from rospy_message_converter.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
+        from base64 import b64encode
+        expected_data = bytes(bytearray([97, 98, 99]))
+        expected_message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
+        dictionary = {"arrays": [{"data": b64encode(expected_data), "additional_args": "should be ignored"}]}
+        message = message_converter.convert_dictionary_to_ros_message(
+            'rospy_message_converter/NestedUint8ArrayTestMessage', dictionary, strict_mode=False)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
     def test_dictionary_with_missing_field_unchecked(self):
         from std_msgs.msg import Bool
         expected_message = Bool(data=False)
@@ -481,6 +503,23 @@ class TestMessageConverter(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/Bool', dictionary, check_missing_fields=True)
         self.assertEqual('''Missing fields "{'data': 'bool'}"''',
+                         context.exception.args[0])
+
+    def test_dictionary_with_nested_missing_field_unchecked(self):
+        from rospy_message_converter.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
+        expected_message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=[])])
+        dictionary = {"arrays": [{}]}
+        message = message_converter.convert_dictionary_to_ros_message(
+            'rospy_message_converter/NestedUint8ArrayTestMessage', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
+    def test_dictionary_with_nested_missing_field_checked(self):
+        dictionary = {"arrays": [{}]}
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('rospy_message_converter/NestedUint8ArrayTestMessage',
+                                                                dictionary, check_missing_fields=True)
+        self.assertEqual('''Missing fields "{'data': 'uint8[]'}"''',
                          context.exception.args[0])
 
     def test_dictionary_with_wrong_type(self):

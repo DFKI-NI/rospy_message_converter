@@ -101,7 +101,8 @@ ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
                        'float32', 'float64', 'string']
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
 
-def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True, check_missing_fields=False, check_types=True):
+def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True,
+                                      check_missing_fields=False, check_types=True):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
 
@@ -135,7 +136,8 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
     for field_name, field_value in dictionary.items():
         if field_name in message_fields:
             field_type = message_fields[field_name]
-            field_value = _convert_to_ros_type(field_name, field_type, field_value, check_types)
+            field_value = _convert_to_ros_type(field_name, field_type, field_value, strict_mode, check_missing_fields,
+                                               check_types)
             setattr(message, field_name, field_value)
             del remaining_message_fields[field_name]
         else:
@@ -152,7 +154,8 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 
     return message
 
-def _convert_to_ros_type(field_name, field_type, field_value, check_types=True):
+def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False,
+                         check_types=True):
     if _is_ros_binary_type(field_type):
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
@@ -168,10 +171,12 @@ def _convert_to_ros_type(field_name, field_type, field_value, check_types=True):
     elif _is_field_type_a_primitive_array(field_type):
         field_value = field_value
     elif _is_field_type_an_array(field_type):
-        field_value = _convert_to_ros_array(field_name, field_type, field_value, check_types)
+        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields,
+                                            check_types)
     else:
-        field_value = convert_dictionary_to_ros_message(field_type, field_value, check_types=check_types)
-
+        field_value = convert_dictionary_to_ros_message(field_type, field_value, strict_mode=strict_mode,
+                                                        check_missing_fields=check_missing_fields,
+                                                        check_types=check_types)
     return field_value
 
 def _convert_to_ros_binary(field_type, field_value):
@@ -212,10 +217,12 @@ def _convert_to_ros_primitive(field_type, field_value):
         field_value = field_value.encode('utf-8')
     return field_value
 
-def _convert_to_ros_array(field_name, field_type, list_value, check_types=True):
+def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, check_missing_fields=False,
+                          check_types=True):
     # use index to raise ValueError if '[' not present
     list_type = field_type[:field_type.index('[')]
-    return [_convert_to_ros_type(field_name, list_type, value, check_types) for value in list_value]
+    return [_convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields, check_types) for value
+            in list_value]
 
 def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
     """
