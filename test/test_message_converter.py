@@ -267,6 +267,39 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
 
+    def test_ros_message_with_empty_service(self):
+        from std_srvs.srv import EmptyRequest, EmptyResponse
+        expected_dictionary_req = {}
+        expected_dictionary_res = {}
+        request = EmptyRequest()
+        request = serialize_deserialize(request)
+        response = EmptyResponse()
+        response = serialize_deserialize(response)
+        dictionary_req = message_converter.convert_ros_message_to_dictionary(request)
+        self.assertEqual(dictionary_req, expected_dictionary_req)
+        dictionary_res = message_converter.convert_ros_message_to_dictionary(response)
+        self.assertEqual(dictionary_res, expected_dictionary_res)
+
+    def test_ros_message_with_nested_service(self):
+        from rospy_message_converter.srv import NestedUint8ArrayTestServiceRequest, NestedUint8ArrayTestServiceResponse
+        from rospy_message_converter.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
+        from base64 import b64encode
+        expected_data = bytes(bytearray([97, 98, 99]))
+
+        expected_dictionary_req = {"input": {"arrays": [{"data": b64encode(expected_data).decode('utf-8')}]}}
+        expected_dictionary_res = {"output": {"arrays": [{"data": b64encode(expected_data).decode('utf-8')}]}}
+        request = NestedUint8ArrayTestServiceRequest(
+            input=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
+        request = serialize_deserialize(request)
+        response = NestedUint8ArrayTestServiceResponse(
+            output=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
+        response = serialize_deserialize(response)
+
+        dictionary_req = message_converter.convert_ros_message_to_dictionary(request)
+        self.assertEqual(dictionary_req, expected_dictionary_req)
+        dictionary_res = message_converter.convert_ros_message_to_dictionary(response)
+        self.assertEqual(dictionary_res, expected_dictionary_res)
+
     def test_dictionary_with_array(self):
         from rospy_message_converter.msg import TestArray
         expected_message = TestArray(data = [1.1, 2.2, 3.3, 4.4])
@@ -656,6 +689,27 @@ class TestMessageConverter(unittest.TestCase):
         message = message_converter.convert_dictionary_to_ros_message('std_srvs/Empty', dictionary_res,
                                                                       'response')
         expected_res = serialize_deserialize(expected_res)
+        self.assertEqual(message, expected_res)
+
+    def test_dictionary_with_nested_service(self):
+        from rospy_message_converter.srv import NestedUint8ArrayTestServiceRequest, NestedUint8ArrayTestServiceResponse
+        from rospy_message_converter.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
+        from base64 import b64encode
+        expected_data = bytes(bytearray([97, 98, 99]))
+        expected_req = NestedUint8ArrayTestServiceRequest(
+            input=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
+        expected_req = serialize_deserialize(expected_req)
+        expected_res = NestedUint8ArrayTestServiceResponse(
+            output=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
+        expected_res = serialize_deserialize(expected_res)
+
+        dictionary_req = {"input": {"arrays": [{"data": b64encode(expected_data)}]}}
+        dictionary_res = {"output": {"arrays": [{"data": b64encode(expected_data)}]}}
+        message = message_converter.convert_dictionary_to_ros_message(
+            'rospy_message_converter/NestedUint8ArrayTestService', dictionary_req, 'request')
+        self.assertEqual(message, expected_req)
+        message = message_converter.convert_dictionary_to_ros_message(
+            'rospy_message_converter/NestedUint8ArrayTestService', dictionary_res, 'response')
         self.assertEqual(message, expected_res)
 
     def test_dictionary_with_setbool_service(self):

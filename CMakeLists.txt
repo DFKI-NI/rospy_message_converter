@@ -14,6 +14,12 @@ add_message_files(
   NOINSTALL
 )
 
+add_service_files(
+  FILES
+  NestedUint8ArrayTestService.srv
+  NOINSTALL
+)
+
 catkin_python_setup()
 
 # Generate added messages and services with any dependencies listed here
