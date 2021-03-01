@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Propagate strict_mode, check_missing_fields in _convert_to_ros_type
+  Previously, _convert_to_ros_type dropped strict_mode and
+  check_missing_fields in nested messages.
+* Add NestedUint8ArrayTestService tests
+* propagate check_types in _convert_to_ros_type (`#51 <https://github.com/uos/rospy_message_converter/issues/51>`_)
+  Co-authored-by: Martin Günther <martin.guenther@dfki.de>
+* Fix binary_array_as_bytes=False with nested msgs
+* Add param binary_array_as_bytes
+  Closes `#45 <https://github.com/uos/rospy_message_converter/issues/45>`_.
+* Contributors: Marc Bosch-Jorge, Martin Günther, Otacon5555
+
 0.5.5 (2020-11-09)
 ------------------
 * Decode strings from ROS messages as UTF8
