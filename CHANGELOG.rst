@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.6 (2021-03-01)
+------------------
 * Propagate strict_mode, check_missing_fields in _convert_to_ros_type
   Previously, _convert_to_ros_type dropped strict_mode and
   check_missing_fields in nested messages.
