@@ -31,12 +31,28 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import roslib.message
-import rospy
+
 import base64
 import sys
 import copy
 import collections
+import rclpy
+import std_msgs
+import geometry_msgs
+
+from time import time
+
+from rosidl_runtime_py.utilities import get_message
+from rosidl_runtime_py.utilities import get_service
+
+from rosidl_parser.definition import BasicType
+from rosidl_parser.definition import UnboundedString
+from rosidl_parser.definition import NamespacedType
+from rosidl_parser.definition import AbstractSequence
+from rosidl_parser.definition import Array
+
+from builtin_interfaces.msg import Time
+from builtin_interfaces.msg import Duration
 
 python3 = (sys.hexversion > 0x03000000)
 
@@ -95,11 +111,11 @@ except ImportError:
     pass
 
 
-ros_time_types = ['time', 'duration']
-ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
-                       'uint16', 'int32', 'uint32', 'int64', 'uint64',
-                       'float32', 'float64', 'string']
-ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
+ros_time_types = ['Time', 'Duration']
+# ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
+#                        'uint16', 'int32', 'uint32', 'int64', 'uint64',
+#                        'float32', 'float64', 'string']
+ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
 
 def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True,
                                       check_missing_fields=False, check_types=True):
@@ -107,30 +123,33 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
     Takes in the message type and a Python dictionary and returns a ROS message.
 
     Example:
-        >>> msg_type = "std_msgs/String"
+        >>> msg_type = "std_msgs/msg/String"
         >>> dict_msg = { "data": "Hello, Robot" }
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg)
         data: "Hello, Robot"
 
-        >>> msg_type = "std_srvs/SetBool"
+        >>> msg_type = "std_srvs/srv/SetBool"
         >>> dict_msg = { "data": True }
         >>> kind = "request"
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg, kind)
         data: True
     """
-    if kind == 'message':
-        message_class = roslib.message.get_message_class(message_type)
-        message = message_class()
-    elif kind == 'request':
-        service_class = roslib.message.get_service_class(message_type)
-        message = service_class._request_class()
-    elif kind == 'response':
-        service_class = roslib.message.get_service_class(message_type)
-        message = service_class._response_class()
+    if type(message_type) in python_string_types:
+        if kind == 'message':
+            message_class =  get_message(message_type)
+            message = message_class()
+        elif kind == 'request':
+            service_class = get_service(message_type)
+            message = service_class._request_class()
+        elif kind == 'response':
+            service_class = get_service(message_type)
+            message = service_class._response_class()
+        else:
+            raise ValueError('Unknown kind "%s".' % kind)
     else:
-        raise ValueError('Unknown kind "%s".' % kind)
-    message_fields = dict(_get_message_fields(message))
-
+        message = message_type()
+    
+    message_fields = dict(_get_message_fields_and_types(message))
     remaining_message_fields = copy.deepcopy(message_fields)
 
     for field_name, field_value in dictionary.items():
@@ -146,7 +165,8 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
             if strict_mode:
                 raise ValueError(error_message)
             else:
-                rospy.logerr('{}! It will be ignored.'.format(error_message))
+                #rospy.logerr('{}! It will be ignored.'.format(error_message))
+                pass
 
     if check_missing_fields and remaining_message_fields:
         error_message = 'Missing fields "{0}"'.format(remaining_message_fields)
@@ -156,27 +176,37 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 
 def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False,
                          check_types=True):
-    if _is_ros_binary_type(field_type):
-        field_value = _convert_to_ros_binary(field_type, field_value)
-    elif field_type in ros_time_types:
-        field_value = _convert_to_ros_time(field_type, field_value)
-    elif field_type in ros_primitive_types:
-        # Note: one could also use genpy.message.check_type() here, but:
-        # 1. check_type is "not designed to run fast and is meant only for error diagnosis"
-        # 2. it doesn't check floats (see ros/genpy#130)
-        # 3. it rejects numpy types, although they can be serialized
-        if check_types and type(field_value) not in ros_to_python_type_map[field_type]:
-            raise TypeError("Field '{0}' has wrong type {1} (valid types: {2})".format(field_name, type(field_value), ros_to_python_type_map[field_type]))
-        field_value = _convert_to_ros_primitive(field_type, field_value)
-    elif _is_field_type_a_primitive_array(field_type):
-        field_value = field_value
-    elif _is_field_type_an_array(field_type):
-        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields,
-                                            check_types)
-    else:
+    
+    if isinstance(field_type, BasicType):
+        # field_value = field_value
+        #print("Basic Type!")
+        pass
+    elif isinstance(field_type, UnboundedString):
+        #print("UnboundedString Type!")
+        pass
+    elif isinstance(field_type, NamespacedType):
+        #print("Namespaced Type!")
+        if field_type.name in ros_time_types:
+            #print("ROS2 Time Type!")
+            field_value = _convert_to_ros_time(field_type, field_value)
+        else:
+            field_type = parse_rosidl_type_to_string(field_type)
+            field_value = convert_dictionary_to_ros_message(field_type, field_value, strict_mode=strict_mode,
+                check_missing_fields=check_missing_fields,
+                check_types=check_types)
+    elif isinstance(field_type, AbstractSequence):
+        #print("AbstractSequence")
+        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields, check_types)
+    elif isinstance(field_type, Array):
+        # field_value = field_value 
+        pass
+    else: 
+        #print("Everything else!")
+        field_type = parse_rosidl_type_to_string(field_type)
         field_value = convert_dictionary_to_ros_message(field_type, field_value, strict_mode=strict_mode,
-                                                        check_missing_fields=check_missing_fields,
-                                                        check_types=check_types)
+            check_missing_fields=check_missing_fields,
+            check_types=check_types)
+
     return field_value
 
 def _convert_to_ros_binary(field_type, field_value):
@@ -197,17 +227,17 @@ def _convert_to_ros_binary(field_type, field_value):
 def _convert_to_ros_time(field_type, field_value):
     time = None
 
-    if field_type == 'time' and field_value == 'now':
-        time = rospy.get_rostime()
+    if field_type.name == 'Time' and field_value == 'now':
+        time = get_now_time()
     else:
-        if field_type == 'time':
-            time = rospy.rostime.Time()
-        elif field_type == 'duration':
-            time = rospy.rostime.Duration()
-        if 'secs' in field_value:
-            setattr(time, 'secs', field_value['secs'])
-        if 'nsecs' in field_value:
-            setattr(time, 'nsecs', field_value['nsecs'])
+        if field_type.name == 'Time':
+            time = Time()
+        elif field_type.name == 'Duration':
+            time = Duration()
+        if 'sec' in field_value:
+            setattr(time, 'sec', field_value['sec'])
+        if 'nanosec' in field_value:
+            setattr(time, 'nanosec', field_value['nanosec'])
 
     return time
 
@@ -220,11 +250,12 @@ def _convert_to_ros_primitive(field_type, field_value):
 def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, check_missing_fields=False,
                           check_types=True):
     # use index to raise ValueError if '[' not present
-    list_type = field_type[:field_type.index('[')]
+    list_type = field_type.value_type
     return [_convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields, check_types) for value
             in list_value]
 
 def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
+
     """
     Takes in a ROS message and returns a Python dictionary.
 
@@ -235,34 +266,60 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
         {'data': 42}
     """
     dictionary = {}
-    message_fields = _get_message_fields(message)
-    for field_name, field_type in message_fields:
-        field_value = getattr(message, field_name)
-        dictionary[field_name] = _convert_from_ros_type(field_type, field_value, binary_array_as_bytes)
+    message_fields = dict(_get_message_fields_and_types(message))
+    for field_name, field_type in message_fields.items() :
+       field_value = getattr(message, field_name)
+       dictionary[field_name] = _convert_from_ros_type(field_type, field_value, binary_array_as_bytes)
 
     return dictionary
 
 
 def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
-    if field_type in ros_primitive_types:
-        field_value = _convert_from_ros_primitive(field_type, field_value)
-    elif field_type in ros_time_types:
-        field_value = _convert_from_ros_time(field_type, field_value)
-    elif _is_ros_binary_type(field_type):
-        if binary_array_as_bytes:
-            field_value = _convert_from_ros_binary(field_type, field_value)
-        elif type(field_value) == str:
-            field_value = [ord(v) for v in field_value]
-        else:
-            field_value = list(field_value)
-    elif _is_field_type_a_primitive_array(field_type):
-        field_value = list(field_value)
-    elif _is_field_type_an_array(field_type):
-        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
-    else:
+
+    #TODO Add types 
+
+    if isinstance(field_type, BasicType):
+        # field_value = field_value
+        #print("Basic Type!")
+        pass
+    elif isinstance(field_type, UnboundedString):
+        #print("UnboundedString Type!")
+        pass
+    elif isinstance(field_type, NamespacedType):
+        #print("Namespaced Type!")
+        field_type = parse_rosidl_type_to_string(field_type)
         field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
+    elif isinstance(field_type, AbstractSequence):
+        #print("AbstractSequence Type!")
+        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
+    elif isinstance(field_type, Array):
+        field_value = list(field_value) 
+    else: 
+        #print("Everything else!")
+        field_type = parse_rosidl_type_to_string(field_type)
+        field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
+    
+    # if field_type in ros_primitive_types:
+    #     field_value = _convert_from_ros_primitive(field_type, field_value)
+    # elif field_type in ros_time_types:
+    #     field_value = _convert_from_ros_time(field_type, field_value)
+    # elif _is_ros_binary_type(field_type):
+    #     if binary_array_as_bytes:
+    #         field_value = _convert_from_ros_binary(field_type, field_value)
+    #     elif type(field_value) == str:
+    #         field_value = [ord(v) for v in field_value]
+    #     else:
+    #         field_value = list(field_value)
+    # elif _is_field_type_a_primitive_array(field_type):
+    #     field_value = list(field_value)
+    # elif _is_field_type_an_array(field_type):
+    #     field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
+    # else:
+    #     field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
 
     return field_value
+
+# https://github.com/ros2/rosidl/blob/master/rosidl_parser/rosidl_parser/definition.py
 
 def _is_ros_binary_type(field_type):
     """ Checks if the field is a binary array one, fixed size or not
@@ -301,23 +358,44 @@ def _convert_from_ros_primitive(field_type, field_value):
 
 def _convert_from_ros_array(field_type, field_value, binary_array_as_bytes=True):
     # use index to raise ValueError if '[' not present
-    list_type = field_type[:field_type.index('[')]
+    list_type = field_type.value_type
     return [_convert_from_ros_type(list_type, value, binary_array_as_bytes) for value in field_value]
 
-def _get_message_fields(message):
-    return zip(message.__slots__, message._slot_types)
+def _get_message_fields_and_types(message):
+    # Workaround due to new python API https://github.com/ros2/rosidl_python/issues/99
+    slots = message.__slots__
+    slots = [slot[1:] for slot in message.__slots__] #remove trailing underscore
+    return zip(slots, message.SLOT_TYPES)
 
 def _is_field_type_an_array(field_type):
-    return field_type.find('[') >= 0
+    return field_type.find('sequence') >= 0
 
 def _is_field_type_a_primitive_array(field_type):
-    bracket_index = field_type.find('[')
-    if bracket_index < 0:
+    if field_type.find('sequence') < 0:
         return False
     else:
-        list_type = field_type[:bracket_index]
+        list_type = field_type[:field_type.find('>')].replace('sequence<', '')
         return list_type in ros_primitive_types
 
+def parse_rosidl_type_to_string(rosidl_type):
+    # TODO: find more elegant solution to this
+    if not type(rosidl_type) in python_string_types:
+        field_type = ""
+        for ns in rosidl_type.namespaces:
+            field_type += ns 
+            field_type += '/'
+        field_type+= rosidl_type.name
+    
+    return field_type
+
+def get_now_time():
+    # TODO: look for more elegant ways
+    
+    now = time()
+    now_time = Time()
+    now_time.sec = (int)(now/60)
+    now_time.nanosec = (int)(now%60)
+    return now_time
 
 if __name__ == "__main__":
     import doctest

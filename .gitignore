@@ -1,3 +1,7 @@
 *.pyc
 .idea
 *.iml
+build 
+log
+install
+*__pycache__*

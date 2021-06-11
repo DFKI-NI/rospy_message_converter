@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>rclpy_message_converter</name>
+  <version>0.5.6</version>
+  <description>Converts between Python dictionaries and JSON to rclpy messages.</description>
+  <maintainer email="martin.guenther@dfki.de">Martin Günther</maintainer>
+  <license>BSD</license>
+  <url type="website">http://ros.org/wiki/rospy_message_converter</url>
+  <url type="repository">https://github.com/uos/rospy_message_converter</url>
+  <url type="bugtracker">https://github.com/uos/rospy_message_converter/issues</url>
+  <author email="baalexander@gmail.com">Brandon Alexander</author>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>rclpy_message_converter_msgs</test_depend>
+  
+  <build_depend>builtin_interfaces</build_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+  
+</package>

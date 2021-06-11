@@ -1,7 +1,6 @@
 import json
 
-from rospy_message_converter import message_converter
-
+import rclpy_message_converter.message_converter
 
 def convert_json_to_ros_message(message_type, json_message, strict_mode=True):
     """
