@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import numpy as np
 import struct
 import sys
 import unittest
+import logging
 
 from rclpy.serialization import deserialize_message
 from rclpy.serialization import serialize_message
@@ -86,7 +86,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
         # TODO: more elegant way for now-time
-        now_time = message_converter._get_now_time()
+        now_time = message_converter.get_now_time()
         expected_dictionary = {
             'stamp': { 'sec': now_time.sec, 'nanosec': now_time.nanosec },
             'frame_id' : 'my_frame',
@@ -209,7 +209,7 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_time(self):
         from builtin_interfaces.msg import Time
-        now_time = message_converter._get_now_time()
+        now_time = message_converter.get_now_time()
         expected_dictionary = { 
             'sec': now_time.sec, 'nanosec': now_time.nanosec 
         }
@@ -453,7 +453,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_header(self):
         from std_msgs.msg import Header
         from time import time
-        now_time = message_converter._get_now_time()
+        now_time = message_converter.get_now_time()
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
@@ -469,7 +469,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_header_with_no_prefix(self):
         from std_msgs.msg import Header
         from time import time
-        now_time = message_converter._get_now_time()
+        now_time = message_converter.get_now_time()
         expected_message = Header(
             stamp = now_time,
             frame_id = 'my_frame',
@@ -565,7 +565,7 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_time(self):
         from builtin_interfaces.msg import Time
-        now_time = message_converter._get_now_time()
+        now_time = message_converter.get_now_time()
         expected_message = Time(sec = now_time.sec, nanosec= now_time.nanosec)
         dictionary = {
             'sec'  : now_time.sec,

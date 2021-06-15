@@ -39,6 +39,8 @@ import collections
 import rclpy
 import std_msgs
 import geometry_msgs
+import logging
+from rclpy.logging import LoggingSeverity
 
 from time import time
 
@@ -91,6 +93,10 @@ ros_time_types = ['Time', 'Duration']
 # static array, unbounded dynamic array, bounded dynamic array, bounded string
 ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
 
+_logger = rclpy.logging.get_logger('rclpy_message_converter')
+_logger.set_level(LoggingSeverity.DEBUG)
+
+
 def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True,
                                       check_missing_fields=False, check_types=True):
     """
@@ -127,8 +133,10 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
         message = message_type()
     ## TODO: Add error msg and test
 
+    _logger.debug("Converting dict to {0} of type: {1}".format(kind, message))
     message_fields = _get_message_fields_and_types(message)
     remaining_message_fields = copy.deepcopy(message_fields)
+
 
     for field_name, field_value in dictionary.items():
         if field_name in message_fields:
@@ -160,6 +168,7 @@ def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, 
 
     # BasicTypes / Builtin Types / Primitive Types
     if isinstance(field_type, BasicType):
+        _logger.debug("{0} is BasicType [{1}]".format(field_value, field_type.typename))
         # check if field_value fits field_type
         # Note: one could also use genpy.message.check_type() here, but:
         # 1. check_type is "not designed to run fast and is meant only for error diagnosis"
@@ -170,8 +179,9 @@ def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, 
                 field_name, type(field_value), ros_to_python_type_map[field_type.typename]))
         pass
     elif isinstance(field_type, NamedType):
-        pass
+        _logger.debug("{0} is NamedType".format(field_type.typename))
     elif isinstance(field_type, NamespacedType):
+        _logger.debug("{0} is NamespacedType".format(field_type.name))
         if field_type.name in ros_time_types:
             field_value = _convert_to_ros_time(field_type, field_value)
         else:
@@ -180,13 +190,14 @@ def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, 
                 check_missing_fields=check_missing_fields,
                 check_types=check_types)
     elif isinstance(field_type, AbstractGenericString):
+        _logger.debug("{0} is AbstractGenericString".format(field_type))
         # includes UnboundedString, BoundedString, UnboundedWString and BoundedWString
-        # field_value = field_value
-        pass
     elif isinstance(field_type, Array):
+        _logger.debug("{0} is Array".format(field_value))
         # field_value = field_value
         pass
     elif isinstance(field_type, AbstractSequence):
+        _logger.debug("{0} is AbstractSequence".format(field_type))
         # includes BoundedSequence and UnboundedSequence
         field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields, check_types)
     else: 
@@ -201,7 +212,7 @@ def _convert_to_ros_time(field_type, field_value):
     time = None
 
     if field_type.name == 'Time' and field_value == 'now':
-        time = _get_now_time()
+        time = get_now_time()
     else:
         if field_type.name == 'Time':
             time = Time()
@@ -234,8 +245,10 @@ def convert_ros_message_to_dictionary(message):
     """
     dictionary = {}
     message_fields = _get_message_fields_and_types(message)
+    _logger.debug("Converting msg {0} to dict".format(message))
     for field_name, field_type in message_fields.items() :
        field_value = getattr(message, field_name)
+       _logger.debug("Adding {0} : {1} [{2}] to dict".format(field_name, field_value, field_type))
        dictionary[field_name] = _convert_from_ros_type(field_type, field_value)
 
     return dictionary
@@ -245,24 +258,26 @@ def _convert_from_ros_type(field_type, field_value):
 
     if isinstance(field_type, BasicType):
         # field_value = field_value
-        pass
+        _logger.debug("{0} is BasicType [{1}]".format(field_value, field_type.typename))
     elif isinstance(field_type, NamedType):
-        pass
+        _logger.debug("{0} is NamedType".format(field_type.typename))
     elif isinstance(field_type, NamespacedType):
+        _logger.debug("{0} is NamespacedType".format(field_type.name))
         field_type = _parse_rosidl_type_to_string(field_type)
         field_value = convert_ros_message_to_dictionary(field_value)
     elif isinstance(field_type, AbstractGenericString):
+        _logger.debug("{0} is AbstractGenericString".format(field_type))
         # includes UnboundedString, BoundedString, UnboundedWString and BoundedWString
         # field_value = field_value
-        pass
     elif isinstance(field_type, Array):
-        field_value = list(field_value) 
-        pass
+        _logger.debug("{0} is Array".format(field_value))
+        field_value = _convert_from_ros_array(field_type, field_value)
     elif isinstance(field_type, AbstractSequence):
+        _logger.debug("{0} is AbstractSequence".format(field_type))
         # includes BoundedSequence and UnboundedSequence
         field_value = _convert_from_ros_array(field_type, field_value)
     else: 
-        pass
+        _logger.debug("{0} is of no known ROS2 rosidl type".format(field_type))
 
     return field_value
 
@@ -276,6 +291,7 @@ def _convert_from_ros_time(field_type, field_value):
 def _convert_from_ros_array(field_type, field_value):
     # use index to raise ValueError if '[' not present
     list_type = field_type.value_type
+    _logger.debug("Converting from ROS array - field_type.value_type: {0}".format(field_type.value_type))
     return [_convert_from_ros_type(list_type, value) for value in field_value]
 
 def _get_message_fields_and_types(message):
@@ -296,7 +312,7 @@ def _parse_rosidl_type_to_string(rosidl_type):
     
     return field_type
 
-def _get_now_time():
+def get_now_time():
     # TODO: look for more elegant ways
     now = time()
     now_time = Time()

@@ -1,6 +1,6 @@
 import json
 
-import rclpy_message_converter.message_converter
+from rclpy_message_converter import message_converter
 
 def convert_json_to_ros_message(message_type, json_message, strict_mode=True):
     """
@@ -26,7 +26,7 @@ def convert_json_to_ros_message(message_type, json_message, strict_mode=True):
     return message_converter.convert_dictionary_to_ros_message(message_type, dictionary, strict_mode=strict_mode)
 
 
-def convert_ros_message_to_json(message, binary_array_as_bytes=True):
+def convert_ros_message_to_json(message):
     """
     Takes in a ROS message and returns a JSON-formatted string.
 
@@ -45,10 +45,12 @@ def convert_ros_message_to_json(message, binary_array_as_bytes=True):
         >>> convert_ros_message_to_json(ros_message)
         '{"data": "Hello, Robot"}'
     """
-    dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes)
+    dictionary = message_converter.convert_ros_message_to_dictionary(message)
     json_message = json.dumps(dictionary)
     return json_message
 
+def get_now_time():
+    return message_converter.get_now_time()
 
 if __name__ == "__main__":
     import doctest
