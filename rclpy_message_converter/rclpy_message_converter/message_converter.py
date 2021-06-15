@@ -46,10 +46,11 @@ from rosidl_runtime_py.utilities import get_message
 from rosidl_runtime_py.utilities import get_service
 
 from rosidl_parser.definition import BasicType
-from rosidl_parser.definition import UnboundedString
+from rosidl_parser.definition import NamedType
 from rosidl_parser.definition import NamespacedType
-from rosidl_parser.definition import AbstractSequence
+from rosidl_parser.definition import AbstractGenericString
 from rosidl_parser.definition import Array
+from rosidl_parser.definition import AbstractSequence
 
 from builtin_interfaces.msg import Time
 from builtin_interfaces.msg import Duration
@@ -112,9 +113,15 @@ except ImportError:
 
 
 ros_time_types = ['Time', 'Duration']
-# ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
-#                        'uint16', 'int32', 'uint32', 'int64', 'uint64',
-#                        'float32', 'float64', 'string']
+
+#https://docs.ros.org/en/foxy/Concepts/About-ROS-Interfaces.html
+ros_builtin_types = ['bool', 'byte', 'char', 
+                      'float32', 'float64',
+                      'int8', 'uint8', 'int16', 'uint16', 
+                      'int32', 'uint32', 'int64', 'uint64',
+                       'string', 'wstring']
+
+# static array, unbounded dynamic array, bounded dynamic array, bounded string
 ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
 
 def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True,
@@ -134,22 +141,25 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg, kind)
         data: True
     """
+
+    """ If message type is manually given as string """
     if type(message_type) in python_string_types:
         if kind == 'message':
             message_class =  get_message(message_type)
             message = message_class()
         elif kind == 'request':
             service_class = get_service(message_type)
-            message = service_class._request_class()
+            message = service_class.Request()
         elif kind == 'response':
             service_class = get_service(message_type)
-            message = service_class._response_class()
+            message = service_class.Response()
         else:
             raise ValueError('Unknown kind "%s".' % kind)
-    else:
+    else:   # If message type is handed as object
+    # if (isinstance Message) #from rosidl definition import Message / Service 
         message = message_type()
     
-    message_fields = dict(_get_message_fields_and_types(message))
+    message_fields = _get_message_fields_and_types(message)
     remaining_message_fields = copy.deepcopy(message_fields)
 
     for field_name, field_value in dictionary.items():
@@ -169,7 +179,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
                 pass
 
     if check_missing_fields and remaining_message_fields:
-        error_message = 'Missing fields "{0}"'.format(remaining_message_fields)
+        error_message = 'Missing fields: {0}'.format(list(remaining_message_fields.keys()))
         raise ValueError(error_message)
 
     return message
@@ -177,58 +187,45 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False,
                          check_types=True):
     
+    # Check all Types according to rosidl parser definition
+    # https://github.com/ros2/rosidl/blob/master/rosidl_parser/rosidl_parser/definition.py
+
     if isinstance(field_type, BasicType):
         # field_value = field_value
-        #print("Basic Type!")
         pass
-    elif isinstance(field_type, UnboundedString):
-        #print("UnboundedString Type!")
+    elif isinstance(field_type, NamedType):
         pass
     elif isinstance(field_type, NamespacedType):
-        #print("Namespaced Type!")
         if field_type.name in ros_time_types:
-            #print("ROS2 Time Type!")
             field_value = _convert_to_ros_time(field_type, field_value)
         else:
-            field_type = parse_rosidl_type_to_string(field_type)
+            field_type = _parse_rosidl_type_to_string(field_type)
             field_value = convert_dictionary_to_ros_message(field_type, field_value, strict_mode=strict_mode,
                 check_missing_fields=check_missing_fields,
                 check_types=check_types)
-    elif isinstance(field_type, AbstractSequence):
-        #print("AbstractSequence")
-        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields, check_types)
-    elif isinstance(field_type, Array):
-        # field_value = field_value 
+    elif isinstance(field_type, AbstractGenericString):
+        # includes UnboundedString, BoundedString, UnboundedWString and BoundedWString
+        # field_value = field_value
         pass
+    elif isinstance(field_type, Array):
+        # field_value = field_value
+        pass
+    elif isinstance(field_type, AbstractSequence):
+        # includes BoundedSequence and UnboundedSequence
+        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields, check_types)
     else: 
-        #print("Everything else!")
-        field_type = parse_rosidl_type_to_string(field_type)
+        field_type = _parse_rosidl_type_to_string(field_type)
         field_value = convert_dictionary_to_ros_message(field_type, field_value, strict_mode=strict_mode,
             check_missing_fields=check_missing_fields,
             check_types=check_types)
 
     return field_value
 
-def _convert_to_ros_binary(field_type, field_value):
-    if type(field_value) in python_string_types:
-        if python3:
-            # base64 in python3 added the `validate` arg:
-            # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the input,
-            # a binascii.Error will be raised.
-            binary_value_as_string = base64.b64decode(field_value, validate=True)
-        else:
-            # base64 in python2 doesn't have the `validate` arg: characters that are not in the base-64 alphabet are
-            # silently discarded, resulting in garbage output.
-            binary_value_as_string = base64.b64decode(field_value)
-    else:
-        binary_value_as_string = bytes(bytearray(field_value))
-    return binary_value_as_string
-
 def _convert_to_ros_time(field_type, field_value):
     time = None
 
     if field_type.name == 'Time' and field_value == 'now':
-        time = get_now_time()
+        time = _get_now_time()
     else:
         if field_type.name == 'Time':
             time = Time()
@@ -240,12 +237,6 @@ def _convert_to_ros_time(field_type, field_value):
             setattr(time, 'nanosec', field_value['nanosec'])
 
     return time
-
-def _convert_to_ros_primitive(field_type, field_value):
-    # std_msgs/msg/_String.py always calls encode() on python3, so don't do it here
-    if field_type == "string" and not python3:
-        field_value = field_value.encode('utf-8')
-    return field_value
 
 def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, check_missing_fields=False,
                           check_types=True):
@@ -266,7 +257,7 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
         {'data': 42}
     """
     dictionary = {}
-    message_fields = dict(_get_message_fields_and_types(message))
+    message_fields = _get_message_fields_and_types(message)
     for field_name, field_type in message_fields.items() :
        field_value = getattr(message, field_name)
        dictionary[field_name] = _convert_from_ros_type(field_type, field_value, binary_array_as_bytes)
@@ -276,72 +267,29 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
 
 def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
 
-    #TODO Add types 
-
     if isinstance(field_type, BasicType):
         # field_value = field_value
-        #print("Basic Type!")
         pass
-    elif isinstance(field_type, UnboundedString):
-        #print("UnboundedString Type!")
+    elif isinstance(field_type, NamedType):
         pass
     elif isinstance(field_type, NamespacedType):
-        #print("Namespaced Type!")
-        field_type = parse_rosidl_type_to_string(field_type)
+        field_type = _parse_rosidl_type_to_string(field_type)
         field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
-    elif isinstance(field_type, AbstractSequence):
-        #print("AbstractSequence Type!")
-        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
+    elif isinstance(field_type, AbstractGenericString):
+        # includes UnboundedString, BoundedString, UnboundedWString and BoundedWString
+        # field_value = field_value
+        pass
     elif isinstance(field_type, Array):
         field_value = list(field_value) 
+        pass
+    elif isinstance(field_type, AbstractSequence):
+        # includes BoundedSequence and UnboundedSequence
+        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
     else: 
-        #print("Everything else!")
-        field_type = parse_rosidl_type_to_string(field_type)
-        field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
-    
-    # if field_type in ros_primitive_types:
-    #     field_value = _convert_from_ros_primitive(field_type, field_value)
-    # elif field_type in ros_time_types:
-    #     field_value = _convert_from_ros_time(field_type, field_value)
-    # elif _is_ros_binary_type(field_type):
-    #     if binary_array_as_bytes:
-    #         field_value = _convert_from_ros_binary(field_type, field_value)
-    #     elif type(field_value) == str:
-    #         field_value = [ord(v) for v in field_value]
-    #     else:
-    #         field_value = list(field_value)
-    # elif _is_field_type_a_primitive_array(field_type):
-    #     field_value = list(field_value)
-    # elif _is_field_type_an_array(field_type):
-    #     field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
-    # else:
-    #     field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
+        pass
 
     return field_value
 
-# https://github.com/ros2/rosidl/blob/master/rosidl_parser/rosidl_parser/definition.py
-
-def _is_ros_binary_type(field_type):
-    """ Checks if the field is a binary array one, fixed size or not
-
-    >>> _is_ros_binary_type("uint8")
-    False
-    >>> _is_ros_binary_type("uint8[]")
-    True
-    >>> _is_ros_binary_type("uint8[3]")
-    True
-    >>> _is_ros_binary_type("char")
-    False
-    >>> _is_ros_binary_type("char[]")
-    True
-    >>> _is_ros_binary_type("char[3]")
-    True
-    """
-    return field_type.startswith('uint8[') or field_type.startswith('char[')
-
-def _convert_from_ros_binary(field_type, field_value):
-    field_value = base64.b64encode(field_value).decode('utf-8')
-    return field_value
 
 def _convert_from_ros_time(field_type, field_value):
     field_value = {
@@ -351,7 +299,7 @@ def _convert_from_ros_time(field_type, field_value):
     return field_value
 
 def _convert_from_ros_primitive(field_type, field_value):
-    # std_msgs/msg/_String.py always calls decode() on python3, so don't do it here
+    # std_msgs/_String.py always calls decode() on python3, so don't do it here
     if field_type == "string" and not python3:
         field_value = field_value.decode('utf-8')
     return field_value
@@ -362,22 +310,13 @@ def _convert_from_ros_array(field_type, field_value, binary_array_as_bytes=True)
     return [_convert_from_ros_type(list_type, value, binary_array_as_bytes) for value in field_value]
 
 def _get_message_fields_and_types(message):
+    dict = {}
     # Workaround due to new python API https://github.com/ros2/rosidl_python/issues/99
-    slots = message.__slots__
-    slots = [slot[1:] for slot in message.__slots__] #remove trailing underscore
-    return zip(slots, message.SLOT_TYPES)
+    for slot, slot_type in zip(message.__slots__, message.SLOT_TYPES):
+        dict[slot[1:]] = slot_type #remove trailing underscore
+    return dict
 
-def _is_field_type_an_array(field_type):
-    return field_type.find('sequence') >= 0
-
-def _is_field_type_a_primitive_array(field_type):
-    if field_type.find('sequence') < 0:
-        return False
-    else:
-        list_type = field_type[:field_type.find('>')].replace('sequence<', '')
-        return list_type in ros_primitive_types
-
-def parse_rosidl_type_to_string(rosidl_type):
+def _parse_rosidl_type_to_string(rosidl_type):
     # TODO: find more elegant solution to this
     if not type(rosidl_type) in python_string_types:
         field_type = ""
@@ -388,9 +327,8 @@ def parse_rosidl_type_to_string(rosidl_type):
     
     return field_type
 
-def get_now_time():
+def _get_now_time():
     # TODO: look for more elegant ways
-    
     now = time()
     now_time = Time()
     now_time.sec = (int)(now/60)
