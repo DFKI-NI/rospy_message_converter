@@ -117,48 +117,28 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_uint8_array(self):
         from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
-        from base64 import b64encode
         expected_data = [97, 98, 99, 100]
         message = Uint8ArrayTestMessage(data=expected_data)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        expected_data = b64encode(bytearray(expected_data)).decode('utf-8')
+        expected_data = expected_data
         self.assertEqual(dictionary["data"], expected_data)
 
     def test_ros_message_with_3uint8_array(self):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
-        from base64 import b64encode
         expected_data = [97, 98, 99]
         message = Uint8Array3TestMessage(data=expected_data)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        expected_data = b64encode(bytearray(expected_data)).decode('utf-8')
         self.assertEqual(dictionary["data"], expected_data)
-
-    def test_ros_message_with_3uint8_array_binary_array_as_array(self):
-        from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
-        expected_data = [97, 98, 99]
-        message = Uint8Array3TestMessage(data=expected_data)
-        message = serialize_deserialize(message)
-        dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes=False)
-        self.assertEqual(dictionary["data"], expected_data)
-
-    def test_ros_message_with_nested_uint8_array_binary_array_as_array(self):
-        from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
-        expected_data = [97, 98, 99]
-        message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
-        message = serialize_deserialize(message)
-        dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes=False)
-        self.assertEqual(dictionary["arrays"][0]["data"], expected_data)
 
     def test_ros_message_with_nested_uint8_array(self):
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
-        from base64 import b64encode
-        expected_data = bytes(bytearray([97, 98, 99]))
+        expected_data = [97, 98, 99]
         message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
-        self.assertEqual(dictionary["arrays"][0]["data"], b64encode(expected_data).decode('utf-8'))
+        self.assertEqual(dictionary["arrays"][0]["data"], expected_data)
 
     def test_ros_message_with_int16(self):
         from std_msgs.msg import Int16
@@ -288,11 +268,10 @@ class TestMessageConverter(unittest.TestCase):
     def test_ros_message_with_nested_service(self):
         from rclpy_message_converter_msgs.srv import NestedUint8ArrayTestService, NestedUint8ArrayTestService
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
-        from base64 import b64encode
-        expected_data = bytes(bytearray([97, 98, 99]))
+        expected_data = [97, 98, 99]
 
-        expected_dictionary_req = {"input": {"arrays": [{"data": b64encode(expected_data).decode('utf-8')}]}}
-        expected_dictionary_res = {"output": {"arrays": [{"data": b64encode(expected_data).decode('utf-8')}]}}
+        expected_dictionary_req = {"input": {"arrays": [{"data": expected_data}]}}
+        expected_dictionary_res = {"output": {"arrays": [{"data": expected_data}]}}
         request = NestedUint8ArrayTestService.Request(
             input=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
         request = serialize_deserialize(request)
@@ -313,28 +292,10 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
-    def test_dictionary_with_uint8_array_bytes(self):
-        """
-        rospy treats uint8[] data as `bytes`, which is the Python representation for byte data. In Python 2, this is
-        the same as `str`. The `bytes` value must be base64-encoded.
-        """
-        from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
-        from base64 import b64encode
-        expected_message = Uint8ArrayTestMessage(data=bytes(bytearray([97, 98, 99])))
-        dictionary = {'data': b64encode(expected_message.data)}   # base64 encoding
-        message = message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
-                                                                      dictionary)
-        expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
-
     def test_dictionary_with_uint8_array_list(self):
-        """
-        Even though rospy treats uint8[] data as `bytes`, rclpy_message_converter also handles lists of int. In that
-        case, the input data must *not* be base64-encoded.
-        """
         from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
         expected_message = Uint8ArrayTestMessage(data=[1, 2, 3, 4])
-        dictionary = {'data': expected_message.data}   # no base64 encoding
+        dictionary = {'data': expected_message.data}
         message = message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
                                                                       dictionary)
         expected_message = serialize_deserialize(expected_message)
@@ -346,54 +307,6 @@ class TestMessageConverter(unittest.TestCase):
             message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
                                                                 dictionary)
         self.assertEqual('byte must be in range(0, 256)', context.exception.args[0])
-
-    def test_dictionary_with_uint8_array_bytes_unencoded(self):
-        """
-        If the value of a uint8[] field has type `bytes`, rclpy_message_converter expects that data to be
-        base64-encoded and runs b64decode on it. This test documents what happens if the value is
-        not base64-encoded.
-        """
-        from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
-        import binascii
-
-        # this raises a TypeError, because:
-        # * b64decode removes all characters that are not in the standard alphabet ([A-Za-Z0-9+/])
-        # * this only leaves 97 (= 'a')
-        # * the length of a base64 string must be a multiple of 4 characters (if necessary, padded at the end with '=')
-        # * since the length of 'a' is not a multiple of 4, a TypeError is thrown
-        dictionary = {'data': bytes(bytearray([1, 2, 97, 4]))}
-        with self.assertRaises((TypeError, binascii.Error)) as context:
-            message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
-                                                                dictionary)
-        if type(context.exception) == TypeError:  # python2
-            error_msg = context.exception.args[0].args[0]
-        else:  # python3
-            error_msg = context.exception.args[0]
-        self.assertIn(error_msg, ['Incorrect padding', 'Non-base64 digit found'])
-
-        dictionary = {'data': bytes(bytearray([1, 97, 97, 2, 3, 97, 4, 97]))}
-        if python3:
-            # On python3, we validate the input, so an error is raised.
-            with self.assertRaises(binascii.Error) as context:
-                message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
-                                                                    dictionary)
-            self.assertEqual('Non-base64 digit found', context.exception.args[0])
-        else:
-            # if the dictionary contains a multiple of 4 characters from the standard alphabet, no error is raised
-            # (but the result is garbage).
-            message = message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
-                                                                          dictionary)
-            expected_message = serialize_deserialize(Uint8ArrayTestMessage(data=bytes(bytearray([105, 166, 154]))))
-            self.assertEqual(message, expected_message)
-
-    # def test_dictionary_with_3uint8_array_bytes(self):
-    #     from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
-    #     from base64 import b64encode
-    #     expected_message = Uint8Array3TestMessage(data=bytes(bytearray([97, 98, 99])))
-    #     dictionary = {'data': b64encode(expected_message.data)}
-    #     message = message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/Uint8Array3TestMessage', dictionary)
-    #     expected_message = serialize_deserialize(expected_message)
-    #     self.assertEqual(message, expected_message)
 
     def test_dictionary_with_3uint8_array_list(self):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
@@ -463,9 +376,8 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_nested_additional_args_strict_mode(self):
-        from base64 import b64encode
-        expected_data = bytes(bytearray([97, 98, 99]))
-        dictionary = {"arrays": [{"data": b64encode(expected_data), "additional_args": "should raise value error"}]}
+        expected_data = [97, 98, 99]
+        dictionary = {"arrays": [{"data": expected_data, "additional_args": "should raise value error"}]}
         with self.assertRaises(ValueError) as context:
             message_converter.convert_dictionary_to_ros_message('rclpy_message_converter_msgs/msg/NestedUint8ArrayTestMessage',
                                                                 dictionary)
@@ -476,9 +388,9 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_nested_additional_args_forgiving(self):
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
         from base64 import b64encode
-        expected_data = bytes(bytearray([97, 98, 99]))
+        expected_data = [97, 98, 99]
         expected_message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
-        dictionary = {"arrays": [{"data": b64encode(expected_data), "additional_args": "should be ignored"}]}
+        dictionary = {"arrays": [{"data": expected_data, "additional_args": "should be ignored"}]}
         message = message_converter.convert_dictionary_to_ros_message(
             'rclpy_message_converter_msgs/msg/NestedUint8ArrayTestMessage', dictionary, strict_mode=False)
         expected_message = serialize_deserialize(expected_message)
@@ -663,14 +575,14 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
-    # TODO: Rewrite test once get_time is defined
-    # def test_dictionary_with_time_now(self):
-    #     dictionary = {
-    #         'data': 'now'
-    #     }
-    #     with self.assertRaises(ROSInitException) as context:
-    #         message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Time', dictionary)
-    #     self.assertEqual('time is not initialized. Have you called init_node()?', context.exception.args[0])
+    # # TODO: Rewrite test once get_time is defined
+    # # def test_dictionary_with_time_now(self):
+    # #     dictionary = {
+    # #         'data': 'now'
+    # #     }
+    # #     with self.assertRaises(ROSInitException) as context:
+    # #         message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Time', dictionary)
+    # #     self.assertEqual('time is not initialized. Have you called init_node()?', context.exception.args[0])
 
     def test_dictionary_with_child_message(self):
         from std_msgs.msg import Float64MultiArray, MultiArrayLayout, MultiArrayDimension
@@ -730,8 +642,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_nested_service(self):
         from rclpy_message_converter_msgs.srv import NestedUint8ArrayTestService
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
-        from base64 import b64encode
-        expected_data = bytes(bytearray([97, 98, 99]))
+        expected_data = [97, 98, 99]
         expected_req = NestedUint8ArrayTestService.Request(
             input=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
         expected_req = serialize_deserialize(expected_req)
@@ -739,8 +650,8 @@ class TestMessageConverter(unittest.TestCase):
             output=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)]))
         expected_res = serialize_deserialize(expected_res)
 
-        dictionary_req = {"input": {"arrays": [{"data": b64encode(expected_data)}]}}
-        dictionary_res = {"output": {"arrays": [{"data": b64encode(expected_data)}]}}
+        dictionary_req = {"input": {"arrays": [{"data": expected_data}]}}
+        dictionary_res = {"output": {"arrays": [{"data": expected_data}]}}
         message = message_converter.convert_dictionary_to_ros_message(
             'rclpy_message_converter_msgs/srv/NestedUint8ArrayTestService', dictionary_req, 'request')
         self.assertEqual(message, expected_req)

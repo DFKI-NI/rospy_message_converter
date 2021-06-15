@@ -68,49 +68,6 @@ else:
 
 python_float_types = [float]
 
-ros_to_python_type_map = {
-    'bool'    : [bool],
-    'float32' : copy.deepcopy(python_float_types + python_int_types),
-    'float64' : copy.deepcopy(python_float_types + python_int_types),
-    'int8'    : copy.deepcopy(python_int_types),
-    'int16'   : copy.deepcopy(python_int_types),
-    'int32'   : copy.deepcopy(python_int_types),
-    'int64'   : copy.deepcopy(python_int_types),
-    'uint8'   : copy.deepcopy(python_int_types),
-    'uint16'  : copy.deepcopy(python_int_types),
-    'uint32'  : copy.deepcopy(python_int_types),
-    'uint64'  : copy.deepcopy(python_int_types),
-    'byte'    : copy.deepcopy(python_int_types),
-    'char'    : copy.deepcopy(python_int_types),
-    'string'  : copy.deepcopy(python_string_types)
-}
-
-try:
-    import numpy as np
-    _ros_to_numpy_type_map = {
-        'float32' : [np.float32, np.int8, np.int16, np.uint8, np.uint16],
-        # don't include int32, because conversion to float may change value: v = np.iinfo(np.int32).max; np.float32(v) != v
-        'float64' : [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
-        'int8'    : [np.int8],
-        'int16'   : [np.int8, np.int16, np.uint8],
-        'int32'   : [np.int8, np.int16, np.int32, np.uint8, np.uint16],
-        'int64'   : [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
-        'uint8'   : [np.uint8],
-        'uint16'  : [np.uint8, np.uint16],
-        'uint32'  : [np.uint8, np.uint16, np.uint32],
-        'uint64'  : [np.uint8, np.uint16, np.uint32, np.uint64],
-        'byte'    : [np.int8],
-        'char'    : [np.uint8],
-    }
-
-    # merge type_maps
-    merged = collections.defaultdict(list, ros_to_python_type_map)
-    for k, v in _ros_to_numpy_type_map.items():
-        merged[k].extend(v)
-    ros_to_python_type_map = dict(merged)
-except ImportError:
-    pass
-
 
 ros_time_types = ['Time', 'Duration']
 
@@ -245,7 +202,7 @@ def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, 
     return [_convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields, check_types) for value
             in list_value]
 
-def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
+def convert_ros_message_to_dictionary(message):
 
     """
     Takes in a ROS message and returns a Python dictionary.
@@ -260,12 +217,12 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
     message_fields = _get_message_fields_and_types(message)
     for field_name, field_type in message_fields.items() :
        field_value = getattr(message, field_name)
-       dictionary[field_name] = _convert_from_ros_type(field_type, field_value, binary_array_as_bytes)
+       dictionary[field_name] = _convert_from_ros_type(field_type, field_value)
 
     return dictionary
 
 
-def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
+def _convert_from_ros_type(field_type, field_value):
 
     if isinstance(field_type, BasicType):
         # field_value = field_value
@@ -274,7 +231,7 @@ def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
         pass
     elif isinstance(field_type, NamespacedType):
         field_type = _parse_rosidl_type_to_string(field_type)
-        field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
+        field_value = convert_ros_message_to_dictionary(field_value)
     elif isinstance(field_type, AbstractGenericString):
         # includes UnboundedString, BoundedString, UnboundedWString and BoundedWString
         # field_value = field_value
@@ -284,12 +241,11 @@ def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
         pass
     elif isinstance(field_type, AbstractSequence):
         # includes BoundedSequence and UnboundedSequence
-        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
+        field_value = _convert_from_ros_array(field_type, field_value)
     else: 
         pass
 
     return field_value
-
 
 def _convert_from_ros_time(field_type, field_value):
     field_value = {
@@ -298,16 +254,10 @@ def _convert_from_ros_time(field_type, field_value):
     }
     return field_value
 
-def _convert_from_ros_primitive(field_type, field_value):
-    # std_msgs/_String.py always calls decode() on python3, so don't do it here
-    if field_type == "string" and not python3:
-        field_value = field_value.decode('utf-8')
-    return field_value
-
-def _convert_from_ros_array(field_type, field_value, binary_array_as_bytes=True):
+def _convert_from_ros_array(field_type, field_value):
     # use index to raise ValueError if '[' not present
     list_type = field_type.value_type
-    return [_convert_from_ros_type(list_type, value, binary_array_as_bytes) for value in field_value]
+    return [_convert_from_ros_type(list_type, value) for value in field_value]
 
 def _get_message_fields_and_types(message):
     dict = {}
