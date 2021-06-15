@@ -56,27 +56,37 @@ from builtin_interfaces.msg import Time
 from builtin_interfaces.msg import Duration
 
 python3 = (sys.hexversion > 0x03000000)
-
 python_list_types = [list, tuple]
-
 if python3:
     python_string_types = [str, bytes]
     python_int_types = [int]
 else:
     python_string_types = [str, unicode]
     python_int_types = [int, long]
-
 python_float_types = [float]
 
+ros_to_python_type_map = {
+    'boolean' : [bool],  # msg type interface returns c++ type value
+    'double'  : [float], # msg type interface returns c++ type value
+    'float'   : [float], # msg type interface returns c++ type value
+    'octet'   : [bytes], # msg type interface returns c++ type value
+    'float32' : [float],
+    'float64' : [float],
+    'int8'    : [int],
+    'int16'   : [int],
+    'int32'   : [int],
+    'int64'   : [int],
+    'uint8'   : [int],
+    'uint16'  : [int],
+    'uint32'  : [int],
+    'uint64'  : [int],
+    'byte'    : [bytes],
+    'char'    : [str],
+    'string'  : [str],
+    'wstring' : [str]
+}
 
 ros_time_types = ['Time', 'Duration']
-
-#https://docs.ros.org/en/foxy/Concepts/About-ROS-Interfaces.html
-ros_builtin_types = ['bool', 'byte', 'char', 
-                      'float32', 'float64',
-                      'int8', 'uint8', 'int16', 'uint16', 
-                      'int32', 'uint32', 'int64', 'uint64',
-                       'string', 'wstring']
 
 # static array, unbounded dynamic array, bounded dynamic array, bounded string
 ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
@@ -115,7 +125,8 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
     else:   # If message type is handed as object
     # if (isinstance Message) #from rosidl definition import Message / Service 
         message = message_type()
-    
+    ## TODO: Add error msg and test
+
     message_fields = _get_message_fields_and_types(message)
     remaining_message_fields = copy.deepcopy(message_fields)
 
@@ -147,8 +158,16 @@ def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, 
     # Check all Types according to rosidl parser definition
     # https://github.com/ros2/rosidl/blob/master/rosidl_parser/rosidl_parser/definition.py
 
+    # BasicTypes / Builtin Types / Primitive Types
     if isinstance(field_type, BasicType):
-        # field_value = field_value
+        # check if field_value fits field_type
+        # Note: one could also use genpy.message.check_type() here, but:
+        # 1. check_type is "not designed to run fast and is meant only for error diagnosis"
+        # 2. it doesn't check floats (see ros/genpy#130)
+        # 3. it rejects numpy types, although they can be serialized
+        if check_types and type(field_value) not in ros_to_python_type_map[field_type.typename]:
+            raise TypeError("Field '{0}' has wrong type {1} (valid types: {2})".format(
+                field_name, type(field_value), ros_to_python_type_map[field_type.typename]))
         pass
     elif isinstance(field_type, NamedType):
         pass
