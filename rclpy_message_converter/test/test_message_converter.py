@@ -452,7 +452,7 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = {"data": "should_be_a_bool"}
         with self.assertRaises(TypeError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Bool', dictionary)
-        self.assertTrue("Field 'data' has wrong type" in context.exception.args[0])
+        self.assertTrue("The 'data' field must be of type 'bool'" in context.exception.args[0])
 
     def test_dictionary_with_float32(self):
         from std_msgs.msg import Float32
