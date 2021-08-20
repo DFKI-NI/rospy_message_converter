@@ -309,8 +309,7 @@ class TestMessageConverter(unittest.TestCase):
             message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage',
                 dictionary)
-        self.assertEqual("The 'data' field must be a set or sequence and each value of type 'int' \
-                         and each unsigned integer in [0, 255]", context.exception.args[0])
+        self.assertEqual("The 'data' field must be a set or sequence and each value of type 'int' and each unsigned integer in [0, 255]", context.exception.args[0])
 
     def test_dictionary_with_3uint8_array_list(self):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
@@ -396,8 +395,7 @@ class TestMessageConverter(unittest.TestCase):
                 'rclpy_message_converter_msgs/msg/NestedUint8ArrayTestMessage',
                 dictionary)
         self.assertEqual(
-            'ROS message type "rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage" has no \
-            field named "additional_args"', context.exception.args[0])
+            'ROS message type "rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage" has no field named "additional_args"', context.exception.args[0])
 
     def test_dictionary_with_nested_additional_args_forgiving(self):
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, \
@@ -450,7 +448,7 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_wrong_type(self):
         dictionary = {"data": "should_be_a_bool"}
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(AssertionError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Bool', dictionary)
         self.assertTrue("The 'data' field must be of type 'bool'" in context.exception.args[0])
 
