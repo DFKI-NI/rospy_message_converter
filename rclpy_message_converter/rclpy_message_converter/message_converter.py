@@ -53,74 +53,12 @@ from rosidl_parser.definition import AbstractSequence
 from builtin_interfaces.msg import Time
 from builtin_interfaces.msg import Duration
 
+# ROS2: only python 3
 python3 = (sys.hexversion > 0x03000000)
-
-python_list_types = [list, tuple]
 
 if python3:
     python_string_types = [str, bytes]
-    python_int_types = [int]
-else:
-    python_string_types = [str]
-    python_int_types = [int]
-
-python_float_types = [float]
-
-ros_to_python_type_map = {
-    'boolean': [bool],  # msg type interface returns c++ type value
-    'double': [float],  # msg type interface returns c++ type value
-    'float': [float],   # msg type interface returns c++ type value
-    'octet': [bytes],   # msg type interface returns c++ type value
-    'float32': [float],
-    'float64': [float],
-    'int8': [int],
-    'int16': [int],
-    'int32': [int],
-    'int64': [int],
-    'uint8': [int],
-    'uint16': [int],
-    'uint32': [int],
-    'uint64': [int],
-    'byte': [bytes],
-    'char': [str],
-    'string': [str],
-    'wstring': [str]
-}
-
-try:
-    import numpy as np
-    _ros_to_numpy_type_map = {
-        'float32': [np.float32, np.int8, np.int16, np.uint8, np.uint16],
-        # don't include int32, because conversion to float may change value:
-        # v = np.iinfo(np.int32).max; np.float32(v) != v
-        'float64': [np.float32, np.float64, np.int8, np.int16, np.int32, \
-                    np.uint8, np.uint16, np.uint32],
-        'int8': [np.int8],
-        'int16': [np.int8, np.int16, np.uint8],
-        'int32': [np.int8, np.int16, np.int32, np.uint8, np.uint16],
-        'int64': [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
-        'uint8': [np.uint8],
-        'uint16': [np.uint8, np.uint16],
-        'uint32': [np.uint8, np.uint16, np.uint32],
-        'uint64': [np.uint8, np.uint16, np.uint32, np.uint64],
-        'byte': [np.int8],
-        'char': [np.uint8],
-    }
-
-    # merge type_maps
-    merged = collections.defaultdict(list, ros_to_python_type_map)
-    for k, v in _ros_to_numpy_type_map.items():
-        merged[k].extend(v)
-    ros_to_python_type_map = dict(merged)
-except ImportError:
-    pass
-
-
 ros_time_types = ['Time', 'Duration']
-# ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
-#                        'uint16', 'int32', 'uint32', 'int64', 'uint64',
-#                        'float32', 'float64', 'string']
-ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
 
 _logger = rclpy.logging.get_logger('rclpy_message_converter')
 _logger.set_level(LoggingSeverity.INFO)
