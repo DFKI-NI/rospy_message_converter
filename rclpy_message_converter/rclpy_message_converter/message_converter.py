@@ -32,12 +32,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 
-import sys
 import copy
-import collections
-import rclpy
 
-from rclpy.logging import LoggingSeverity
 from time import time
 
 from rosidl_runtime_py.utilities import get_message
@@ -53,11 +49,7 @@ from rosidl_parser.definition import AbstractSequence
 from builtin_interfaces.msg import Time
 from builtin_interfaces.msg import Duration
 
-# ROS2: only python 3
-python3 = (sys.hexversion > 0x03000000)
-
-if python3:
-    python_string_types = [str, bytes]
+python_string_types = [str, bytes]
 ros_time_types = ['Time', 'Duration']
 
 
@@ -96,7 +88,6 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
         # if (isinstance Message) #from rosidl definition import Message / Service
         message = message_type()
         # TODO: Add error msg and test
-
 
     message_fields = dict(_get_message_fields_and_types(message))
     remaining_message_fields = copy.deepcopy(message_fields)
@@ -235,13 +226,6 @@ def _convert_from_ros_time(field_type, field_value):
         'secs': field_value.secs,
         'nsecs': field_value.nsecs
     }
-    return field_value
-
-
-def _convert_from_ros_primitive(field_type, field_value):
-    # std_msgs/msg/_String.py always calls decode() on python3, so don't do it here
-    if field_type == "string" and not python3:
-        field_value = field_value.decode('utf-8')
     return field_value
 
 
