@@ -60,9 +60,6 @@ if python3:
     python_string_types = [str, bytes]
 ros_time_types = ['Time', 'Duration']
 
-_logger = rclpy.logging.get_logger('rclpy_message_converter')
-_logger.set_level(LoggingSeverity.INFO)
-
 
 def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True,
                                       check_missing_fields=False, check_types=True):
@@ -100,7 +97,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
         message = message_type()
         # TODO: Add error msg and test
 
-    _logger.debug("Converting dict to {0} of type: {1}".format(kind, message))
+
     message_fields = dict(_get_message_fields_and_types(message))
     remaining_message_fields = copy.deepcopy(message_fields)
 
@@ -130,19 +127,15 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True,
                          check_missing_fields=False, check_types=True):
     if isinstance(field_type, BasicType):
-        _logger.debug("{0} is BasicType [{1}]".format(field_value, field_type.typename))
         pass
     elif isinstance(field_type, NamedType):
-        _logger.debug("{0} is NamedType".format(field_type.typename))
         pass
     elif isinstance(field_type, AbstractGenericString):
         # includes UnboundedString, BoundedString and
         # AbstractWstring(UnboundedWString and BoundedWString)
-        _logger.debug("{0} is AbstractGenericString".format(field_type))
+        pass
     elif isinstance(field_type, NamespacedType):
-        _logger.debug("{0} is NamespacedType".format(field_type.name))
         if field_type.name in ros_time_types:
-            _logger.debug("{0} is ros time type".format(field_type.name))
             field_value = _convert_to_ros_time(field_type, field_value)
         else:
             field_type = parse_rosidl_type_to_string(field_type)
@@ -151,16 +144,13 @@ def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True,
                 check_missing_fields=check_missing_fields, check_types=check_types)
 
     elif isinstance(field_type, Array):
-        _logger.debug("{0} is Array".format(field_value))
         # field_value = field_value
         pass
     elif isinstance(field_type, AbstractSequence):
         # includes BoundedSequence and UnboundedSequence
-        _logger.debug("{0} is AbstractSequence".format(field_type))
         field_value = _convert_to_ros_array(
             field_name, field_type, field_value, strict_mode, check_missing_fields, check_types)
     else:
-        _logger.debug("{0} could not be categorized".format(field_type))
         field_type = parse_rosidl_type_to_string(field_type)
         field_value = convert_dictionary_to_ros_message(
             field_type, field_value, strict_mode=strict_mode,
@@ -208,10 +198,8 @@ def convert_ros_message_to_dictionary(message):
     """
     dictionary = {}
     message_fields = dict(_get_message_fields_and_types(message))
-    _logger.debug("Converting msg {0} to dict".format(message))
     for field_name, field_type in message_fields.items():
         field_value = getattr(message, field_name)
-        _logger.debug("Adding {0} : {1} [{2}] to dict".format(field_name, field_value, field_type))
         dictionary[field_name] = _convert_from_ros_type(field_type, field_value)
 
     return dictionary
@@ -220,27 +208,23 @@ def convert_ros_message_to_dictionary(message):
 def _convert_from_ros_type(field_type, field_value):
 
     if isinstance(field_type, BasicType):
-        _logger.debug("{0} is BasicType [{1}]".format(field_value, field_type.typename))
         pass
     elif isinstance(field_type, NamedType):
-        _logger.debug("{0} is NamedType".format(field_type.typename))
+        pass
     elif isinstance(field_type, NamespacedType):
-        _logger.debug("{0} is NamespacedType".format(field_type.name))
         field_type = parse_rosidl_type_to_string(field_type)
         field_value = convert_ros_message_to_dictionary(field_value)
     elif isinstance(field_type, AbstractGenericString):
         # includes UnboundedString, BoundedString, UnboundedWString and BoundedWString
-        _logger.debug("{0} is AbstractGenericString".format(field_type))
+        pass
     elif isinstance(field_type, Array):
-        _logger.debug("{0} is Array".format(field_value))
         field_value = list(field_value)
     elif isinstance(field_type, AbstractSequence):
         # includes BoundedSequence and UnboundedSequence
-        _logger.debug("{0} is AbstractSequence".format(field_type))
+
         field_value = _convert_from_ros_array(field_type, field_value)
     else:
-        _logger.debug("{0} is of no known ROS2 rosidl type".format(field_type))
-        # print("Everything else!")
+        pass
         # field_type = parse_rosidl_type_to_string(field_type)
         # field_value = convert_ros_message_to_dictionary(field_value)
     return field_value
@@ -264,8 +248,6 @@ def _convert_from_ros_primitive(field_type, field_value):
 def _convert_from_ros_array(field_type, field_value):
     # use index to raise ValueError if '[' not present
     list_type = field_type.value_type
-    _logger.debug(
-        "Converting from ROS array - field_type.value_type: {0}".format(field_type.value_type))
     return [_convert_from_ros_type(list_type, value) for value in field_value]
 
 
