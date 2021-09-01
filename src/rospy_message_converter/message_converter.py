@@ -156,7 +156,6 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 
 def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False,
                          check_types=True):
-    print(field_type,field_value)
     if _is_ros_binary_type(field_type):
         if field_value is None:
             field_value = 0
