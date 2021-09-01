@@ -156,21 +156,37 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 
 def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False,
                          check_types=True):
+    print(field_type,field_value)
     if _is_ros_binary_type(field_type):
+        if field_value is None:
+            field_value = 0
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
+        if field_value is None:
+            field_value = {'secs':0,'nsecs':0}
         field_value = _convert_to_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
         # Note: one could also use genpy.message.check_type() here, but:
         # 1. check_type is "not designed to run fast and is meant only for error diagnosis"
         # 2. it doesn't check floats (see ros/genpy#130)
         # 3. it rejects numpy types, although they can be serialized
+        if field_value is None:
+            if field_type=='string':
+                field_value = ''
+            elif field_type=='bool':
+                field_value = False
+            else:
+                field_value = 0
         if check_types and type(field_value) not in ros_to_python_type_map[field_type]:
             raise TypeError("Field '{0}' has wrong type {1} (valid types: {2})".format(field_name, type(field_value), ros_to_python_type_map[field_type]))
         field_value = _convert_to_ros_primitive(field_type, field_value)
     elif _is_field_type_a_primitive_array(field_type):
+        if field_value is None:
+            field_value = []
         field_value = field_value
     elif _is_field_type_an_array(field_type):
+        if field_value is None:
+            field_value = []
         field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields,
                                             check_types)
     else:
