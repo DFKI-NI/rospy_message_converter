@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Handle None values in dictionary
+* Add tests for None
+* Dockerfile-kinetic: Add --include-eol-distros
+* Contributors: Martin Günther
+
 0.5.6 (2021-03-01)
 ------------------
 * Propagate strict_mode, check_missing_fields in _convert_to_ros_type
