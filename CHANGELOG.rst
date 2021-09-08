@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.7 (2021-09-08)
+------------------
 * Handle None values in dictionary
 * Add tests for None
 * Dockerfile-kinetic: Add --include-eol-distros
