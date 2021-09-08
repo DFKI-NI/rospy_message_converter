@@ -133,12 +133,15 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
 
     remaining_message_fields = copy.deepcopy(message_fields)
 
+    if dictionary is None:
+        dictionary = {}
     for field_name, field_value in dictionary.items():
         if field_name in message_fields:
             field_type = message_fields[field_name]
-            field_value = _convert_to_ros_type(field_name, field_type, field_value, strict_mode, check_missing_fields,
-                                               check_types)
-            setattr(message, field_name, field_value)
+            if field_value is not None:
+                field_value = _convert_to_ros_type(field_name, field_type, field_value, strict_mode, check_missing_fields,
+                                                   check_types)
+                setattr(message, field_name, field_value)
             del remaining_message_fields[field_name]
         else:
             error_message = 'ROS message type "{0}" has no field named "{1}"'\
@@ -204,9 +207,9 @@ def _convert_to_ros_time(field_type, field_value):
             time = rospy.rostime.Time()
         elif field_type == 'duration':
             time = rospy.rostime.Duration()
-        if 'secs' in field_value:
+        if 'secs' in field_value and field_value['secs'] is not None:
             setattr(time, 'secs', field_value['secs'])
-        if 'nsecs' in field_value:
+        if 'nsecs' in field_value and field_value['nsecs'] is not None:
             setattr(time, 'nsecs', field_value['nsecs'])
 
     return time
