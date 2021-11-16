@@ -31,6 +31,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import logging
 import roslib.message
 import rospy
 import base64
@@ -102,7 +103,7 @@ ros_primitive_types = ['bool', 'byte', 'char', 'int8', 'uint8', 'int16',
 ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
 
 def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', strict_mode=True,
-                                      check_missing_fields=False, check_types=True):
+                                      check_missing_fields=False, check_types=True, log_level='error'):
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
 
@@ -149,7 +150,12 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
             if strict_mode:
                 raise ValueError(error_message)
             else:
-                rospy.logerr('{}! It will be ignored.'.format(error_message))
+                if log_level not in ["debug", "info", "warning", "error", "critical"]:
+                    log_level = "error"
+                logger = logging.getLogger('rosout')
+                log_func = getattr(logger, log_level)
+                
+                log_func('{}! It will be ignored.'.format(error_message))                    
 
     if check_missing_fields and remaining_message_fields:
         error_message = 'Missing fields "{0}"'.format(remaining_message_fields)
