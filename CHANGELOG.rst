@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* add option to change log level (`#58 <https://github.com/uos/rospy_message_converter/issues/58>`_)
+* Contributors: Yuri Rocha
+
 0.5.7 (2021-09-08)
 ------------------
 * Handle None values in dictionary
