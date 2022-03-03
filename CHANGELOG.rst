@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.8 (2022-03-03)
+------------------
 * add option to change log level (`#58 <https://github.com/uos/rospy_message_converter/issues/58>`_)
 * Contributors: Yuri Rocha
 
