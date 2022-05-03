@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#
 # Software License Agreement (BSD License)
 #
 # Copyright (c) 2019-2022, Martin Günther (DFKI GmbH) and others
