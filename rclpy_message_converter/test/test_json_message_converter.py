@@ -35,10 +35,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import unittest
-import rospy
+import logging
+
 from rclpy_message_converter import json_message_converter
 from rclpy.serialization import deserialize_message
 from rclpy.serialization import serialize_message
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class TestJsonMessageConverter(unittest.TestCase):

@@ -38,9 +38,7 @@ import numpy as np
 import struct
 import sys
 import unittest
-
-import rospy
-from rospy.exceptions import ROSInitException
+import logging
 
 from rclpy.serialization import deserialize_message
 from rclpy.serialization import serialize_message
@@ -48,6 +46,8 @@ from rclpy.serialization import serialize_message
 from rclpy_message_converter import message_converter
 
 python3 = sys.hexversion > 0x03000000
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class TestMessageConverter(unittest.TestCase):
@@ -72,7 +72,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_ros_message_with_byte(self):
         from std_msgs.msg import Byte
 
-        expected_dictionary = {'data': 5}
+        expected_dictionary = {'data': bytes([5])}
         message = Byte(data=expected_dictionary['data'])
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
@@ -485,7 +485,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_byte(self):
         from std_msgs.msg import Byte
 
-        expected_message = Byte(data=3)
+        expected_message = Byte(data=bytes([3]))
         dictionary = {'data': expected_message.data}
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Byte', dictionary)
         expected_message = serialize_deserialize(expected_message)
@@ -983,7 +983,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_byte_none(self):
         from std_msgs.msg import Byte
 
-        expected_message = Byte(data=0)
+        expected_message = Byte(data=bytes([0]))
         dictionary = {'data': None}
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Byte', dictionary)
         expected_message = serialize_deserialize(expected_message)
