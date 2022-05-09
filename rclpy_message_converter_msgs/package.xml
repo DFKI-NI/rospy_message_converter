@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>rclpy_message_converter_msgs</name>
+  <version>0.0.1</version>
+  <description>Messages for rclpy_message_converter</description>
+  <maintainer email="martin.guenther@dfki.de">Martin Günther</maintainer>
+  <license>BSD</license>
+  <url type="website">http://ros.org/wiki/rospy_message_converter</url>
+  <url type="repository">https://github.com/uos/rospy_message_converter</url>
+  <url type="bugtracker">https://github.com/uos/rospy_message_converter/issues</url>
+  <author email="baalexander@gmail.com">Brandon Alexander</author>
+  <author email="martin.guenther@dfki.de">Martin Günther</author>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build_depend>builtin_interfaces</build_depend>
+  <build_depend>rosidl_default_generators</build_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
