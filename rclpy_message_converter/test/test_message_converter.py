@@ -322,13 +322,13 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_empty_service(self):
-        from std_srvs.srv import EmptyRequest, EmptyResponse
+        from std_srvs.srv import Empty
 
         expected_dictionary_req = {}
         expected_dictionary_res = {}
-        request = EmptyRequest()
+        request = Empty.Request()
         request = serialize_deserialize(request)
-        response = EmptyResponse()
+        response = Empty.Response()
         response = serialize_deserialize(response)
         dictionary_req = message_converter.convert_ros_message_to_dictionary(request)
         self.assertEqual(dictionary_req, expected_dictionary_req)
@@ -336,10 +336,7 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(dictionary_res, expected_dictionary_res)
 
     def test_ros_message_with_nested_service(self):
-        from rclpy_message_converter_msgs.srv import (
-            NestedUint8ArrayTestServiceRequest,
-            NestedUint8ArrayTestServiceResponse,
-        )
+        from rclpy_message_converter_msgs.srv import NestedUint8ArrayTestService
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
         from base64 import b64encode
 
@@ -347,11 +344,11 @@ class TestMessageConverter(unittest.TestCase):
 
         expected_dictionary_req = {"input": {"arrays": [{"data": b64encode(expected_data).decode('utf-8')}]}}
         expected_dictionary_res = {"output": {"arrays": [{"data": b64encode(expected_data).decode('utf-8')}]}}
-        request = NestedUint8ArrayTestServiceRequest(
+        request = NestedUint8ArrayTestService.Request(
             input=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
         )
         request = serialize_deserialize(request)
-        response = NestedUint8ArrayTestServiceResponse(
+        response = NestedUint8ArrayTestService.Response(
             output=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
         )
         response = serialize_deserialize(response)
@@ -808,10 +805,10 @@ class TestMessageConverter(unittest.TestCase):
         )
 
     def test_dictionary_with_empty_service(self):
-        from std_srvs.srv import EmptyRequest, EmptyResponse
+        from std_srvs.srv import Empty
 
-        expected_req = EmptyRequest()
-        expected_res = EmptyResponse()
+        expected_req = Empty.Request()
+        expected_res = Empty.Response()
         dictionary_req = {}
         dictionary_res = {}
         message = message_converter.convert_dictionary_to_ros_message('std_srvs/srv/Empty', dictionary_req, 'request')
@@ -822,19 +819,16 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_res)
 
     def test_dictionary_with_nested_service(self):
-        from rclpy_message_converter_msgs.srv import (
-            NestedUint8ArrayTestServiceRequest,
-            NestedUint8ArrayTestServiceResponse,
-        )
+        from rclpy_message_converter_msgs.srv import NestedUint8ArrayTestService
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
         from base64 import b64encode
 
         expected_data = bytes(bytearray([97, 98, 99]))
-        expected_req = NestedUint8ArrayTestServiceRequest(
+        expected_req = NestedUint8ArrayTestService.Request(
             input=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
         )
         expected_req = serialize_deserialize(expected_req)
-        expected_res = NestedUint8ArrayTestServiceResponse(
+        expected_res = NestedUint8ArrayTestService.Response(
             output=NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
         )
         expected_res = serialize_deserialize(expected_res)
@@ -842,19 +836,19 @@ class TestMessageConverter(unittest.TestCase):
         dictionary_req = {"input": {"arrays": [{"data": b64encode(expected_data)}]}}
         dictionary_res = {"output": {"arrays": [{"data": b64encode(expected_data)}]}}
         message = message_converter.convert_dictionary_to_ros_message(
-            'rclpy_message_converter_msgs/msg/NestedUint8ArrayTestService', dictionary_req, 'request'
+            'rclpy_message_converter_msgs/srv/NestedUint8ArrayTestService', dictionary_req, 'request'
         )
         self.assertEqual(message, expected_req)
         message = message_converter.convert_dictionary_to_ros_message(
-            'rclpy_message_converter_msgs/msg/NestedUint8ArrayTestService', dictionary_res, 'response'
+            'rclpy_message_converter_msgs/srv/NestedUint8ArrayTestService', dictionary_res, 'response'
         )
         self.assertEqual(message, expected_res)
 
     def test_dictionary_with_setbool_service(self):
-        from std_srvs.srv import SetBoolRequest, SetBoolResponse
+        from std_srvs.srv import SetBool
 
-        expected_req = SetBoolRequest(data=True)
-        expected_res = SetBoolResponse(success=True, message='Success!')
+        expected_req = SetBool.Request(data=True)
+        expected_res = SetBool.Response(success=True, message='Success!')
         dictionary_req = {'data': True}
         dictionary_res = {'success': True, 'message': 'Success!'}
         message = message_converter.convert_dictionary_to_ros_message('std_srvs/srv/SetBool', dictionary_req, 'request')
@@ -867,10 +861,10 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_res)
 
     def test_dictionary_with_trigger_service(self):
-        from std_srvs.srv import TriggerRequest, TriggerResponse
+        from std_srvs.srv import Trigger
 
-        expected_req = TriggerRequest()
-        expected_res = TriggerResponse(success=True, message='Success!')
+        expected_req = Trigger.Request()
+        expected_res = Trigger.Response(success=True, message='Success!')
         dictionary_req = {}
         dictionary_res = {'success': True, 'message': 'Success!'}
         message = message_converter.convert_dictionary_to_ros_message('std_srvs/srv/Trigger', dictionary_req, 'request')
