@@ -62,7 +62,9 @@ def convert_json_to_ros_message(message_type, json_message, strict_mode=True, lo
         data: "Hello, Robot"
     """
     dictionary = json.loads(json_message)
-    return message_converter.convert_dictionary_to_ros_message(message_type, dictionary, strict_mode=strict_mode, log_level=log_level)
+    return message_converter.convert_dictionary_to_ros_message(
+        message_type, dictionary, strict_mode=strict_mode, log_level=log_level
+    )
 
 
 def convert_ros_message_to_json(message, binary_array_as_bytes=True):
