@@ -88,11 +88,11 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_duration(self):
-        from std_msgs.msg import Duration
+        from builtin_interfaces.msg import Duration
 
-        duration = rospy.rostime.Duration(33, 25)
-        expected_dictionary = {'data': {'secs': duration.secs, 'nsecs': duration.nsecs}}
-        message = Duration(data=duration)
+        duration = Duration(sec=33, nanosec=25)
+        expected_dictionary = {'sec': duration.sec, 'nanosec': duration.nanosec}
+        message = Duration(sec=duration.sec, nanosec=duration.nanosec)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
@@ -126,15 +126,13 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
-        from time import time
 
-        now_time = rospy.Time(time())
+        now_time = _get_now_time()
         expected_dictionary = {
-            'stamp': {'secs': now_time.secs, 'nsecs': now_time.nsecs},
+            'stamp': {'sec': now_time.sec, 'nanosec': now_time.nanosec},
             'frame_id': 'my_frame',
-            'seq': 3,
         }
-        message = Header(stamp=now_time, frame_id=expected_dictionary['frame_id'], seq=expected_dictionary['seq'])
+        message = Header(stamp=now_time, frame_id=expected_dictionary['frame_id'])
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
@@ -283,12 +281,11 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(dictionary, expected_dictionary)
 
     def test_ros_message_with_time(self):
-        from std_msgs.msg import Time
-        from time import time
+        from builtin_interfaces.msg import Time
 
-        now_time = rospy.Time(time())
-        expected_dictionary = {'data': {'secs': now_time.secs, 'nsecs': now_time.nsecs}}
-        message = Time(data=now_time)
+        now_time = _get_now_time()
+        expected_dictionary = {'sec': now_time.sec, 'nanosec': now_time.nanosec}
+        message = Time(sec=now_time.sec, nanosec=now_time.nanosec)
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(dictionary, expected_dictionary)
@@ -507,12 +504,12 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_duration(self):
-        from std_msgs.msg import Duration
+        from builtin_interfaces.msg import Duration
 
-        duration = rospy.rostime.Duration(33, 25)
-        expected_message = Duration(data=duration)
-        dictionary = {'data': {'secs': duration.secs, 'nsecs': duration.nsecs}}
-        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Duration', dictionary)
+        duration = Duration(sec=33, nanosec=25)
+        expected_message = Duration(sec=duration.sec, nanosec=duration.nanosec)
+        dictionary = {'sec': duration.sec, 'nanosec': duration.nanosec}
+        message = message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Duration', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -633,14 +630,15 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_header(self):
         from std_msgs.msg import Header
-        from time import time
 
-        now_time = rospy.Time(time())
-        expected_message = Header(stamp=now_time, frame_id='my_frame', seq=12)
+        now_time = _get_now_time()
+        expected_message = Header(
+            stamp=now_time,
+            frame_id='my_frame',
+        )
         dictionary = {
-            'stamp': {'secs': now_time.secs, 'nsecs': now_time.nsecs},
+            'stamp': {'sec': now_time.sec, 'nanosec': now_time.nanosec},
             'frame_id': expected_message.frame_id,
-            'seq': expected_message.seq,
         }
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Header', dictionary)
         expected_message = serialize_deserialize(expected_message)
@@ -648,16 +646,17 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_header_with_no_prefix(self):
         from std_msgs.msg import Header
-        from time import time
 
-        now_time = rospy.Time(time())
-        expected_message = Header(stamp=now_time, frame_id='my_frame', seq=12)
+        now_time = _get_now_time()
+        expected_message = Header(
+            stamp=now_time,
+            frame_id='my_frame',
+        )
         dictionary = {
-            'stamp': {'secs': now_time.secs, 'nsecs': now_time.nsecs},
+            'stamp': {'sec': now_time.sec, 'nanosec': now_time.nanosec},
             'frame_id': expected_message.frame_id,
-            'seq': expected_message.seq,
         }
-        message = message_converter.convert_dictionary_to_ros_message('Header', dictionary)
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Header', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -753,13 +752,12 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(type(message.data), type(expected_message.data))
 
     def test_dictionary_with_time(self):
-        from std_msgs.msg import Time
-        from time import time
+        from builtin_interfaces.msg import Time
 
-        now_time = rospy.Time(time())
-        expected_message = Time(data=now_time)
-        dictionary = {'data': {'secs': now_time.secs, 'nsecs': now_time.nsecs}}
-        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Time', dictionary)
+        now_time = _get_now_time()
+        expected_message = Time(sec=now_time.sec, nanosec=now_time.nanosec)
+        dictionary = {'sec': now_time.sec, 'nanosec': now_time.nanosec}
+        message = message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Time', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -1007,20 +1005,11 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_duration_none(self):
-        from std_msgs.msg import Duration
+        from builtin_interfaces.msg import Duration
 
         expected_message = Duration()
-        dictionary = {'data': None}
-        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Duration', dictionary)
-        expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
-
-    def test_dictionary_with_duration_nested_none(self):
-        from std_msgs.msg import Duration
-
-        expected_message = Duration(data=rospy.rostime.Duration())
-        dictionary = {'data': {'secs': None, 'nsecs': None}}
-        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Duration', dictionary)
+        dictionary = {'sec': None, 'nanosec': None}
+        message = message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Duration', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -1045,8 +1034,8 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_header_none(self):
         from std_msgs.msg import Header
 
-        expected_message = Header(stamp=rospy.Time(), frame_id='', seq=12)
-        dictionary = {'stamp': {'secs': None, 'nsecs': 0.0}, 'frame_id': None, 'seq': expected_message.seq}
+        expected_message = Header()
+        dictionary = {'stamp': {'sec': None, 'nanosec': 0.0}, 'frame_id': None}
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Header', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
@@ -1133,21 +1122,11 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_time_none(self):
-        from std_msgs.msg import Time
+        from builtin_interfaces.msg import Time
 
-        expected_message = Time()
-        dictionary = {'data': None}
-        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Time', dictionary)
-        expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
-
-    def test_dictionary_with_time_nested_none(self):
-        from std_msgs.msg import Time
-
-        test_time = rospy.Time.from_sec(0.123456)
-        expected_message = Time(data=test_time)
-        dictionary = {'data': {'secs': None, 'nsecs': test_time.nsecs}}
-        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Time', dictionary)
+        expected_message = Time(sec=0, nanosec=123456789)
+        dictionary = {'sec': None, 'nanosec': expected_message.nanosec}
+        message = message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Time', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -1181,6 +1160,17 @@ class TestMessageConverter(unittest.TestCase):
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Float64MultiArray', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
+
+
+def _get_now_time():
+    from builtin_interfaces.msg import Time
+    import time
+
+    now = time.time()
+    now_time = Time()
+    now_time.sec = int(now)
+    now_time.nanosec = int((now % 1) * 1e9)
+    return now_time
 
 
 def serialize_deserialize(msg):

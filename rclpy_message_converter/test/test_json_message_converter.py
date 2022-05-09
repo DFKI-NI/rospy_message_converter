@@ -62,24 +62,18 @@ class TestJsonMessageConverter(unittest.TestCase):
 
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
-        from time import time
 
-        now_time = rospy.Time(time())
-        expected_json1 = '{{"stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame", "seq": 3}}'.format(
-            now_time.secs, now_time.nsecs
+        now_time = _get_now_time()
+        expected_json1 = '{{"stamp": {{"sec": {0}, "nanosec": {1}}}, "frame_id": "my_frame"}}'.format(
+            now_time.sec, now_time.nanosec
         )
-        expected_json2 = '{{"seq": 3, "stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame"}}'.format(
-            now_time.secs, now_time.nsecs
+        expected_json2 = '{{"frame_id": "my_frame", "stamp": {{"sec": {0}, "nanosec": {1}}}}}'.format(
+            now_time.sec, now_time.nanosec
         )
-        expected_json3 = '{{"frame_id": "my_frame", "seq": 3, "stamp": {{"secs": {0}, "nsecs": {1}}}}}'.format(
-            now_time.secs, now_time.nsecs
-        )
-        message = Header(stamp=now_time, frame_id='my_frame', seq=3)
+        message = Header(stamp=now_time, frame_id='my_frame')
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertTrue(
-            returned_json == expected_json1 or returned_json == expected_json2 or returned_json == expected_json3
-        )
+        self.assertTrue(returned_json == expected_json1 or returned_json == expected_json2)
 
     def test_ros_message_with_uint8_array(self):
         from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
@@ -121,12 +115,14 @@ class TestJsonMessageConverter(unittest.TestCase):
 
     def test_json_with_header(self):
         from std_msgs.msg import Header
-        from time import time
 
-        now_time = rospy.Time(time())
-        expected_message = Header(stamp=now_time, frame_id='my_frame', seq=12)
-        json_str = '{{"stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame", "seq": 12}}'.format(
-            now_time.secs, now_time.nsecs
+        now_time = _get_now_time()
+        expected_message = Header(
+            stamp=now_time,
+            frame_id='my_frame',
+        )
+        json_str = '{{"stamp": {{"sec": {0}, "nanosec": {1}}}, "frame_id": "my_frame"}}'.format(
+            now_time.sec, now_time.nanosec
         )
         message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/Header', json_str)
         expected_message = serialize_deserialize(expected_message)
@@ -148,6 +144,17 @@ class TestJsonMessageConverter(unittest.TestCase):
             'std_msgs/msg/String',
             '{"not_data": "Hello"}',
         )
+
+
+def _get_now_time():
+    from builtin_interfaces.msg import Time
+    import time
+
+    now = time.time()
+    now_time = Time()
+    now_time.sec = int(now)
+    now_time.nanosec = int((now % 1) * 1e9)
+    return now_time
 
 
 def serialize_deserialize(msg):
