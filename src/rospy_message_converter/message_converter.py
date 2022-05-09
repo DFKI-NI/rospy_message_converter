@@ -50,8 +50,8 @@ if python3:
     python_string_types = [str, bytes]
     python_int_types = [int]
 else:
-    python_string_types = [str, unicode]
-    python_int_types = [int, long]
+    python_string_types = [str, unicode]  # noqa
+    python_int_types = [int, long]  # noqa
 
 python_float_types = [float]
 
@@ -77,7 +77,8 @@ try:
 
     _ros_to_numpy_type_map = {
         'float32': [np.float32, np.int8, np.int16, np.uint8, np.uint16],
-        # don't include int32, because conversion to float may change value: v = np.iinfo(np.int32).max; np.float32(v) != v
+        # don't include int32, because conversion to float may change value:
+        # v = np.iinfo(np.int32).max; np.float32(v) != v
         'float64': [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
         'int8': [np.int8],
         'int16': [np.int8, np.int16, np.uint8],
