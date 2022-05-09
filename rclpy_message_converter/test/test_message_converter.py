@@ -751,12 +751,6 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(expected_message, message)
 
-    def test_dictionary_with_time_now(self):
-        dictionary = {'data': 'now'}
-        with self.assertRaises(ROSInitException) as context:
-            message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Time', dictionary)
-        self.assertEqual('time is not initialized. Have you called init_node()?', context.exception.args[0])
-
     def test_dictionary_with_child_message(self):
         from std_msgs.msg import Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 

@@ -238,17 +238,14 @@ def _convert_to_ros_binary(field_type, field_value):
 def _convert_to_ros_time(field_type, field_value):
     time = None
 
-    if field_type == 'time' and field_value == 'now':
-        time = rospy.get_rostime()
-    else:
-        if field_type == 'time':
-            time = rospy.rostime.Time()
-        elif field_type == 'duration':
-            time = rospy.rostime.Duration()
-        if 'secs' in field_value and field_value['secs'] is not None:
-            setattr(time, 'secs', field_value['secs'])
-        if 'nsecs' in field_value and field_value['nsecs'] is not None:
-            setattr(time, 'nsecs', field_value['nsecs'])
+    if field_type == 'time':
+        time = rospy.rostime.Time()
+    elif field_type == 'duration':
+        time = rospy.rostime.Duration()
+    if 'secs' in field_value and field_value['secs'] is not None:
+        setattr(time, 'secs', field_value['secs'])
+    if 'nsecs' in field_value and field_value['nsecs'] is not None:
+        setattr(time, 'nsecs', field_value['nsecs'])
 
     return time
 
