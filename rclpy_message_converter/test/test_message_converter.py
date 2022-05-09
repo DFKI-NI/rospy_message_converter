@@ -1196,11 +1196,3 @@ def serialize_deserialize(message):
     result = message.__class__()  # create new instance of same class as message
     result.deserialize(buff.getvalue())
     return result
-
-
-PKG = 'rclpy_message_converter'
-NAME = 'test_message_converter'
-if __name__ == '__main__':
-    import rosunit
-
-    rosunit.unitrun(PKG, NAME, TestMessageConverter)
