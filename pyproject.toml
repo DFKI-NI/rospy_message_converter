@@ -1,5 +1,5 @@
 [tool.black]
-# The line length here has to match the flake8 config in .flake8
+# The line length here has to match the flake8 config in all setup.cfg files
 line-length = 120
 target-version = ['py38']
 skip-string-normalization = true
