@@ -157,8 +157,8 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
                     log_level = "error"
                 logger = logging.getLogger('rosout')
                 log_func = getattr(logger, log_level)
-                
-                log_func('{}! It will be ignored.'.format(error_message))                    
+
+                log_func('{}! It will be ignored.'.format(error_message))
 
     if check_missing_fields and remaining_message_fields:
         error_message = 'Missing fields "{0}"'.format(remaining_message_fields)
