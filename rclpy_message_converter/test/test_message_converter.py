@@ -44,8 +44,6 @@ from rclpy.serialization import serialize_message
 
 from rclpy_message_converter import message_converter
 
-python3 = sys.hexversion > 0x03000000
-
 logging.basicConfig(level=logging.DEBUG)
 
 
@@ -425,28 +423,15 @@ class TestMessageConverter(unittest.TestCase):
             message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage', dictionary
             )
-        if type(context.exception) == TypeError:  # python2
-            error_msg = context.exception.args[0].args[0]
-        else:  # python3
-            error_msg = context.exception.args[0]
+        error_msg = context.exception.args[0]
         self.assertIn(error_msg, ['Incorrect padding', 'Non-base64 digit found'])
 
         dictionary = {'data': bytes(bytearray([1, 97, 97, 2, 3, 97, 4, 97]))}
-        if python3:
-            # On python3, we validate the input, so an error is raised.
-            with self.assertRaises(binascii.Error) as context:
-                message_converter.convert_dictionary_to_ros_message(
-                    'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage', dictionary
-                )
-            self.assertEqual('Non-base64 digit found', context.exception.args[0])
-        else:
-            # if the dictionary contains a multiple of 4 characters from the standard alphabet, no error is raised
-            # (but the result is garbage).
-            message = message_converter.convert_dictionary_to_ros_message(
+        with self.assertRaises(binascii.Error) as context:
+            message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage', dictionary
             )
-            expected_message = serialize_deserialize(Uint8ArrayTestMessage(data=bytes(bytearray([105, 166, 154]))))
-            self.assertEqual(message, expected_message)
+        self.assertEqual('Non-base64 digit found', context.exception.args[0])
 
     def test_dictionary_with_3uint8_array_bytes(self):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage

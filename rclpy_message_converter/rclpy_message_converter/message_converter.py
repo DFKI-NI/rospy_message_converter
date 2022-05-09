@@ -42,17 +42,9 @@ import sys
 import copy
 import collections
 
-python3 = sys.hexversion > 0x03000000
-
 python_list_types = [list, tuple]
-
-if python3:
-    python_string_types = [str, bytes]
-    python_int_types = [int]
-else:
-    python_string_types = [str, unicode]  # noqa
-    python_int_types = [int, long]  # noqa
-
+python_string_types = [str, bytes]
+python_int_types = [int]
 python_float_types = [float]
 
 ros_to_python_type_map = {
@@ -235,15 +227,9 @@ def _convert_to_ros_type(
 
 def _convert_to_ros_binary(field_type, field_value):
     if type(field_value) in python_string_types:
-        if python3:
-            # base64 in python3 added the `validate` arg:
-            # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the input,
-            # a binascii.Error will be raised.
-            binary_value_as_string = base64.b64decode(field_value, validate=True)
-        else:
-            # base64 in python2 doesn't have the `validate` arg: characters that are not in the base-64 alphabet are
-            # silently discarded, resulting in garbage output.
-            binary_value_as_string = base64.b64decode(field_value)
+        # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the input,
+        # a binascii.Error will be raised.
+        binary_value_as_string = base64.b64decode(field_value, validate=True)
     else:
         binary_value_as_string = bytes(bytearray(field_value))
     return binary_value_as_string
@@ -268,9 +254,6 @@ def _convert_to_ros_time(field_type, field_value):
 
 
 def _convert_to_ros_primitive(field_type, field_value):
-    # std_msgs/msg/msg/_String.py always calls encode() on python3, so don't do it here
-    if field_type == "string" and not python3:
-        field_value = field_value.encode('utf-8')
     return field_value
 
 
@@ -362,9 +345,6 @@ def _convert_from_ros_time(field_type, field_value):
 
 
 def _convert_from_ros_primitive(field_type, field_value):
-    # std_msgs/msg/msg/_String.py always calls decode() on python3, so don't do it here
-    if field_type == "string" and not python3:
-        field_value = field_value.decode('utf-8')
     return field_value
 
 
