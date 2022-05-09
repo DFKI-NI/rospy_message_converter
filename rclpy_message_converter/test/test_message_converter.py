@@ -41,6 +41,10 @@ import unittest
 
 import rospy
 from rospy.exceptions import ROSInitException
+
+from rclpy.serialization import deserialize_message
+from rclpy.serialization import serialize_message
+
 from rclpy_message_converter import message_converter
 
 python3 = sys.hexversion > 0x03000000
@@ -1179,20 +1183,18 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
 
-def serialize_deserialize(message):
+def serialize_deserialize(msg):
     """
-    Serialize and then deserialize a message. This simulates sending a message
-    between ROS nodes and makes sure that the ROS messages being tested are
-    actually serializable, and are in the same format as they would be received
+    Serialize and then deserialize a message.
+
+    This simulates sending a message between ROS nodes and makes sure that the ROS messages being
+    tested are actually serializable, and are in the same format as they would be received
     over the network. In rospy, it is possible to assign an illegal data type
     to a message field (for example, `message = String(data=42)`), but trying
     to publish this message will throw `SerializationError: field data must be
     of type str`. This method will expose such bugs.
     """
-    from io import BytesIO
-
-    buff = BytesIO()
-    message.serialize(buff)
-    result = message.__class__()  # create new instance of same class as message
-    result.deserialize(buff.getvalue())
-    return result
+    msg_serialized = serialize_message(msg)
+    msg_deserialized = deserialize_message(msg_serialized, type(msg))
+    assert msg == msg_deserialized
+    return msg_deserialized
