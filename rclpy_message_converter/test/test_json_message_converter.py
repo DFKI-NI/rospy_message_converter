@@ -36,7 +36,7 @@
 
 import unittest
 import rospy
-from rospy_message_converter import json_message_converter
+from rclpy_message_converter import json_message_converter
 
 
 class TestJsonMessageConverter(unittest.TestCase):
@@ -80,7 +80,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         )
 
     def test_ros_message_with_uint8_array(self):
-        from rospy_message_converter.msg import Uint8ArrayTestMessage
+        from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
 
         input_data = [97, 98, 99, 100]
         expected_json = '{"data": "YWJjZA=="}'  # base64.b64encode("abcd") is "YWJjZA=="
@@ -90,7 +90,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         self.assertEqual(returned_json, expected_json)
 
     def test_ros_message_with_3uint8_array(self):
-        from rospy_message_converter.msg import Uint8Array3TestMessage
+        from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
 
         input_data = [97, 98, 99]
         expected_json = '{"data": "YWJj"}'  # base64.b64encode("abc") is "YWJj"
@@ -104,7 +104,7 @@ class TestJsonMessageConverter(unittest.TestCase):
 
         expected_message = String(data='Hello')
         json_str = '{"data": "Hello"}'
-        message = json_message_converter.convert_json_to_ros_message('std_msgs/String', json_str)
+        message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/String', json_str)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -113,7 +113,7 @@ class TestJsonMessageConverter(unittest.TestCase):
 
         expected_message = String(data=u'Hello \u00dcnicode')
         json_str = '{"data": "Hello \\u00dcnicode"}'
-        message = json_message_converter.convert_json_to_ros_message('std_msgs/String', json_str)
+        message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/String', json_str)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -126,7 +126,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         json_str = '{{"stamp": {{"secs": {0}, "nsecs": {1}}}, "frame_id": "my_frame", "seq": 12}}'.format(
             now_time.secs, now_time.nsecs
         )
-        message = json_message_converter.convert_json_to_ros_message('std_msgs/Header', json_str)
+        message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/Header', json_str)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
@@ -135,13 +135,16 @@ class TestJsonMessageConverter(unittest.TestCase):
 
         expected_message = String(data='')
         json_str = '{"data": null}'
-        message = json_message_converter.convert_json_to_ros_message('std_msgs/String', json_str)
+        message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/String', json_str)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
     def test_json_with_invalid_message_fields(self):
         self.assertRaises(
-            ValueError, json_message_converter.convert_json_to_ros_message, 'std_msgs/String', '{"not_data": "Hello"}'
+            ValueError,
+            json_message_converter.convert_json_to_ros_message,
+            'std_msgs/msg/String',
+            '{"not_data": "Hello"}',
         )
 
 
@@ -164,7 +167,7 @@ def serialize_deserialize(message):
     return result
 
 
-PKG = 'rospy_message_converter'
+PKG = 'rclpy_message_converter'
 NAME = 'test_json_message_converter'
 if __name__ == '__main__':
     import rosunit

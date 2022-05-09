@@ -118,7 +118,7 @@ ros_primitive_types = [
     'float64',
     'string',
 ]
-ros_header_types = ['Header', 'std_msgs/Header', 'roslib/Header']
+ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
 
 
 def convert_dictionary_to_ros_message(
@@ -134,12 +134,12 @@ def convert_dictionary_to_ros_message(
     Takes in the message type and a Python dictionary and returns a ROS message.
 
     Example:
-        >>> msg_type = "std_msgs/String"
+        >>> msg_type = "std_msgs/msg/String"
         >>> dict_msg = { "data": "Hello, Robot" }
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg)
         data: "Hello, Robot"
 
-        >>> msg_type = "std_srvs/SetBool"
+        >>> msg_type = "std_srvs/srv/SetBool"
         >>> dict_msg = { "data": True }
         >>> kind = "request"
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg, kind)
@@ -268,7 +268,7 @@ def _convert_to_ros_time(field_type, field_value):
 
 
 def _convert_to_ros_primitive(field_type, field_value):
-    # std_msgs/msg/_String.py always calls encode() on python3, so don't do it here
+    # std_msgs/msg/msg/_String.py always calls encode() on python3, so don't do it here
     if field_type == "string" and not python3:
         field_value = field_value.encode('utf-8')
     return field_value
@@ -362,7 +362,7 @@ def _convert_from_ros_time(field_type, field_value):
 
 
 def _convert_from_ros_primitive(field_type, field_value):
-    # std_msgs/msg/_String.py always calls decode() on python3, so don't do it here
+    # std_msgs/msg/msg/_String.py always calls decode() on python3, so don't do it here
     if field_type == "string" and not python3:
         field_value = field_value.decode('utf-8')
     return field_value

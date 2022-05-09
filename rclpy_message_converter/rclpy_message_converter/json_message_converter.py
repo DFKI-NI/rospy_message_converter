@@ -36,7 +36,7 @@
 
 import json
 
-from rospy_message_converter import message_converter
+from rclpy_message_converter import message_converter
 
 
 def convert_json_to_ros_message(message_type, json_message, strict_mode=True, log_level='error'):
@@ -56,7 +56,7 @@ def convert_json_to_ros_message(message_type, json_message, strict_mode=True, lo
     :rtype: class:`genpy.Message`
 
     Example:
-        >>> msg_type = "std_msgs/String"
+        >>> msg_type = "std_msgs/msg/String"
         >>> json_msg = '{"data": "Hello, Robot"}'
         >>> convert_json_to_ros_message(msg_type, json_msg)
         data: "Hello, Robot"
