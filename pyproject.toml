@@ -1,0 +1,5 @@
+[tool.black]
+# The line length here has to match the flake8 config in .flake8
+line-length = 120
+target-version = ['py38']
+skip-string-normalization = true
