@@ -36,7 +36,6 @@
 
 import numpy as np
 import struct
-import sys
 import unittest
 import logging
 
@@ -414,7 +413,6 @@ class TestMessageConverter(unittest.TestCase):
         base64-encoded and runs b64decode on it. This test documents what happens if the value is
         not base64-encoded.
         """
-        from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
         import binascii
 
         # this raises a TypeError, because:
