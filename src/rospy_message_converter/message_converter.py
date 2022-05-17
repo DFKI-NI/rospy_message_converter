@@ -144,7 +144,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
             field_type = message_fields[field_name]
             if field_value is not None:
                 field_value = _convert_to_ros_type(field_name, field_type, field_value, strict_mode, check_missing_fields,
-                                                   check_types)
+                                                   check_types, log_level)
                 setattr(message, field_name, field_value)
             del remaining_message_fields[field_name]
         else:
@@ -167,7 +167,7 @@ def convert_dictionary_to_ros_message(message_type, dictionary, kind='message', 
     return message
 
 def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False,
-                         check_types=True):
+                         check_types=True, log_level='error'):
     if _is_ros_binary_type(field_type):
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
@@ -184,11 +184,11 @@ def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, 
         field_value = field_value
     elif _is_field_type_an_array(field_type):
         field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields,
-                                            check_types)
+                                            check_types, log_level)
     else:
         field_value = convert_dictionary_to_ros_message(field_type, field_value, strict_mode=strict_mode,
                                                         check_missing_fields=check_missing_fields,
-                                                        check_types=check_types)
+                                                        check_types=check_types, log_level=log_level)
     return field_value
 
 def _convert_to_ros_binary(field_type, field_value):
@@ -230,10 +230,11 @@ def _convert_to_ros_primitive(field_type, field_value):
     return field_value
 
 def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, check_missing_fields=False,
-                          check_types=True):
+                          check_types=True, log_level='error'):
     # use index to raise ValueError if '[' not present
     list_type = field_type[:field_type.index('[')]
-    return [_convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields, check_types) for value
+    return [_convert_to_ros_type(field_name, list_type, value, strict_mode,
+                                 check_missing_fields, check_types, log_level) for value
             in list_value]
 
 def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
