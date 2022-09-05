@@ -402,11 +402,11 @@ class TestMessageConverter(unittest.TestCase):
 
     def test_dictionary_with_uint8_array_list_invalid(self):
         dictionary = {'data': [1, 2, 3, 4000]}
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(OverflowError) as context:
             message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage', dictionary
             )
-        self.assertEqual('byte must be in range(0, 256)', context.exception.args[0])
+        self.assertEqual('unsigned byte integer is greater than maximum', context.exception.args[0])
 
     def test_dictionary_with_uint8_array_bytes_unencoded(self):
         """
@@ -520,11 +520,11 @@ class TestMessageConverter(unittest.TestCase):
         self.assertEqual(message, expected_message)
 
     def test_dictionary_with_empty_additional_args_strict_mode(self):
-        dictionary = {"additional_args": "should raise value error"}
-        with self.assertRaises(ValueError) as context:
+        dictionary = {"additional_args": "should raise error"}
+        with self.assertRaises(AttributeError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Empty', dictionary)
         self.assertEqual(
-            '''ROS message type "std_msgs/msg/Empty" has no field named "additional_args"''', context.exception.args[0]
+            "'Empty' object has no attribute 'additional_args'", context.exception.args[0]
         )
 
     def test_dictionary_with_empty_additional_args_forgiving(self):
@@ -542,13 +542,13 @@ class TestMessageConverter(unittest.TestCase):
         from base64 import b64encode
 
         expected_data = bytes(bytearray([97, 98, 99]))
-        dictionary = {"arrays": [{"data": b64encode(expected_data), "additional_args": "should raise value error"}]}
-        with self.assertRaises(ValueError) as context:
+        dictionary = {"arrays": [{"data": b64encode(expected_data), "additional_args": "should raise error"}]}
+        with self.assertRaises(AttributeError) as context:
             message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/NestedUint8ArrayTestMessage', dictionary
             )
         self.assertEqual(
-            'ROS message type "rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage" has no field named "additional_args"',  # noqa
+            "'Uint8ArrayTestMessage' object has no attribute 'additional_args'",
             context.exception.args[0],
         )
 
@@ -580,7 +580,7 @@ class TestMessageConverter(unittest.TestCase):
             message_converter.convert_dictionary_to_ros_message(
                 'std_msgs/msg/Bool', dictionary, check_missing_fields=True
             )
-        self.assertEqual('''Missing fields "{'data': 'bool'}"''', context.exception.args[0])
+        self.assertEqual('''fields in dictionary missing from ROS message: "['data']"''', context.exception.args[0])
 
     def test_dictionary_with_nested_missing_field_unchecked(self):
         from rclpy_message_converter_msgs.msg import NestedUint8ArrayTestMessage, Uint8ArrayTestMessage
@@ -599,13 +599,13 @@ class TestMessageConverter(unittest.TestCase):
             message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/NestedUint8ArrayTestMessage', dictionary, check_missing_fields=True
             )
-        self.assertEqual('''Missing fields "{'data': 'uint8[]'}"''', context.exception.args[0])
+        self.assertEqual('''fields in dictionary missing from ROS message: "['data']"''', context.exception.args[0])
 
     def test_dictionary_with_wrong_type(self):
-        dictionary = {"data": "should_be_a_bool"}
-        with self.assertRaises(TypeError) as context:
-            message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Bool', dictionary)
-        self.assertTrue("Field 'data' has wrong type" in context.exception.args[0])
+        dictionary = {"data": "should_be_a_float"}
+        with self.assertRaises(ValueError) as context:
+            message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Float32', dictionary)
+        self.assertTrue("could not convert string to float: 'should_be_a_float'" in context.exception.args[0])
 
     def test_dictionary_with_float32(self):
         from std_msgs.msg import Float32

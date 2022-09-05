@@ -142,7 +142,7 @@ class TestJsonMessageConverter(unittest.TestCase):
 
     def test_json_with_invalid_message_fields(self):
         self.assertRaises(
-            ValueError,
+            AttributeError,
             json_message_converter.convert_json_to_ros_message,
             'std_msgs/msg/String',
             '{"not_data": "Hello"}',
