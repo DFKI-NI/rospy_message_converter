@@ -137,13 +137,13 @@ def convert_dictionary_to_ros_message(
         >>> msg_type = "std_msgs/msg/String"
         >>> dict_msg = { "data": "Hello, Robot" }
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg)
-        data: "Hello, Robot"
+        std_msgs.msg.String(data='Hello, Robot')
 
         >>> msg_type = "std_srvs/srv/SetBool"
         >>> dict_msg = { "data": True }
         >>> kind = "request"
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg, kind)
-        data: True
+        std_srvs.srv.SetBool_Request(data=True)
     """
     if kind == 'message':
         message_class = roslib.message.get_message_class(message_type)
@@ -299,7 +299,7 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
         >>> import std_msgs.msg
         >>> ros_message = std_msgs.msg.UInt32(data=42)
         >>> convert_ros_message_to_dictionary(ros_message)
-        {'data': 42}
+        OrderedDict([('data', 42)])
     """
     dictionary = {}
     message_fields = _get_message_fields(message)
