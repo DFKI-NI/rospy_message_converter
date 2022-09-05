@@ -34,7 +34,6 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import numpy as np
 import struct
 import unittest
 import logging
@@ -506,9 +505,7 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = {"additional_args": "should raise error"}
         with self.assertRaises(AttributeError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Empty', dictionary)
-        self.assertEqual(
-            "'Empty' object has no attribute 'additional_args'", context.exception.args[0]
-        )
+        self.assertEqual("'Empty' object has no attribute 'additional_args'", context.exception.args[0])
 
     def test_dictionary_with_empty_additional_args_forgiving(self):
         from std_msgs.msg import Empty
@@ -862,68 +859,6 @@ class TestMessageConverter(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Empty', {}, kind='invalid')
         self.assertEqual('Unknown kind "invalid".', context.exception.args[0])
-
-    def test_dictionary_with_numpy_conversions(self):
-        from std_msgs.msg import Byte, Char, Float32, Float64, Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64
-
-        numpy_numeric_types = [
-            np.int8,
-            np.int16,
-            np.int32,
-            np.int64,
-            np.uint8,
-            np.uint16,
-            np.uint32,
-            np.uint64,
-            np.float32,
-            np.float64,
-        ]
-        min_values = [
-            np.iinfo(t).min for t in [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64]
-        ] + [np.finfo(t).min for t in [np.float32, np.float64]]
-        max_values = [
-            np.iinfo(t).max for t in [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32, np.uint64]
-        ] + [np.finfo(t).max for t in [np.float32, np.float64]]
-        numeric_limits = {
-            num_type: (min_val, max_val)
-            for (num_type, min_val, max_val) in zip(numpy_numeric_types, min_values, max_values)
-        }
-        ros_to_numpy_type_map = {
-            Float32: [np.float32, np.int8, np.int16, np.uint8, np.uint16],
-            Float64: [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
-            Int8: [np.int8],
-            Int16: [np.int8, np.int16, np.uint8],
-            Int32: [np.int8, np.int16, np.int32, np.uint8, np.uint16],
-            Int64: [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
-            UInt8: [np.uint8],
-            UInt16: [np.uint8, np.uint16],
-            UInt32: [np.uint8, np.uint16, np.uint32],
-            UInt64: [np.uint8, np.uint16, np.uint32, np.uint64],
-            Byte: [np.int8],
-            Char: [np.uint8],
-        }
-
-        def typename(msg):
-            result = msg.__class__.__module__.split('.')
-            result.pop()
-            result.append(msg.__class__.__name__)
-            return '/'.join(result)
-        for ros_type, valid_numpy_types in ros_to_numpy_type_map.items():
-            for numpy_type in valid_numpy_types:
-                for value in numeric_limits[numpy_type]:
-                    expected_message = ros_type(data=numpy_type(value))
-                    dictionary = {'data': numpy_type(value)}
-                    message = message_converter.convert_dictionary_to_ros_message(typename(expected_message), dictionary)
-                    expected_message = serialize_deserialize(expected_message)
-                    self.assertEqual(message, expected_message)
-
-            for wrong_numpy_type in [t for t in numpy_numeric_types if t not in valid_numpy_types]:
-                for value in numeric_limits[wrong_numpy_type]:
-                    with self.assertRaises(TypeError) as context:
-                        expected_message = ros_type(data=wrong_numpy_type(value))
-                        dictionary = {'data': wrong_numpy_type(value)}
-                        message_converter.convert_dictionary_to_ros_message(typename(expected_message), dictionary)
-                    self.assertTrue("Field 'data' has wrong type" in context.exception.args[0])
 
     # -------- Tests for None: --------
     def test_dictionary_with_array_none(self):

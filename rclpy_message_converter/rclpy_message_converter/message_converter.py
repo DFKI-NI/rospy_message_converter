@@ -47,52 +47,6 @@ python_string_types = [str, bytes]
 python_int_types = [int]
 python_float_types = [float]
 
-ros_to_python_type_map = {
-    'bool': [bool],
-    'float32': copy.deepcopy(python_float_types + python_int_types),
-    'float64': copy.deepcopy(python_float_types + python_int_types),
-    'int8': copy.deepcopy(python_int_types),
-    'int16': copy.deepcopy(python_int_types),
-    'int32': copy.deepcopy(python_int_types),
-    'int64': copy.deepcopy(python_int_types),
-    'uint8': copy.deepcopy(python_int_types),
-    'uint16': copy.deepcopy(python_int_types),
-    'uint32': copy.deepcopy(python_int_types),
-    'uint64': copy.deepcopy(python_int_types),
-    'byte': copy.deepcopy(python_int_types),
-    'char': copy.deepcopy(python_int_types),
-    'string': copy.deepcopy(python_string_types),
-}
-
-try:
-    import numpy as np
-
-    _ros_to_numpy_type_map = {
-        'float32': [np.float32, np.int8, np.int16, np.uint8, np.uint16],
-        # don't include int32, because conversion to float may change value:
-        # v = np.iinfo(np.int32).max; np.float32(v) != v
-        'float64': [np.float32, np.float64, np.int8, np.int16, np.int32, np.uint8, np.uint16, np.uint32],
-        'int8': [np.int8],
-        'int16': [np.int8, np.int16, np.uint8],
-        'int32': [np.int8, np.int16, np.int32, np.uint8, np.uint16],
-        'int64': [np.int8, np.int16, np.int32, np.int64, np.uint8, np.uint16, np.uint32],
-        'uint8': [np.uint8],
-        'uint16': [np.uint8, np.uint16],
-        'uint32': [np.uint8, np.uint16, np.uint32],
-        'uint64': [np.uint8, np.uint16, np.uint32, np.uint64],
-        'byte': [np.int8],
-        'char': [np.uint8],
-    }
-
-    # merge type_maps
-    merged = collections.defaultdict(list, ros_to_python_type_map)
-    for k, v in _ros_to_numpy_type_map.items():
-        merged[k].extend(v)
-    ros_to_python_type_map = dict(merged)
-except ImportError:
-    pass
-
-
 ros_time_types = ['time', 'duration']
 ros_primitive_types = [
     'bool',
@@ -119,7 +73,6 @@ def convert_dictionary_to_ros_message(
     kind='message',
     strict_mode=True,
     check_missing_fields=False,
-    check_types=True,
     log_level='error',
 ):
     """
@@ -159,7 +112,7 @@ def convert_dictionary_to_ros_message(
             field_type = message_fields[field_name]
             if field_value is not None:
                 field_value = _convert_to_ros_type(
-                    field_name, field_type, field_value, strict_mode, check_missing_fields, check_types, log_level
+                    field_name, field_type, field_value, strict_mode, check_missing_fields
                 )
                 setattr(message, field_name, field_value)
             del remaining_message_fields[field_name]
@@ -182,44 +135,20 @@ def convert_dictionary_to_ros_message(
     return message
 
 
-def _convert_to_ros_type(
-    field_name,
-    field_type,
-    field_value,
-    strict_mode=True,
-    check_missing_fields=False,
-    check_types=True,
-    log_level='error',
-):
+def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False):
     if _is_ros_binary_type(field_type):
         field_value = _convert_to_ros_binary(field_type, field_value)
     elif field_type in ros_time_types:
         field_value = _convert_to_ros_time(field_type, field_value)
     elif field_type in ros_primitive_types:
-        # Note: one could also use genpy.message.check_type() here, but:
-        # 1. check_type is "not designed to run fast and is meant only for error diagnosis"
-        # 2. it doesn't check floats (see ros/genpy#130)
-        # 3. it rejects numpy types, although they can be serialized
-        if check_types and type(field_value) not in ros_to_python_type_map[field_type]:
-            raise TypeError(
-                "Field '{0}' has wrong type {1} (valid types: {2})".format(
-                    field_name, type(field_value), ros_to_python_type_map[field_type]
-                )
-            )
         field_value = _convert_to_ros_primitive(field_type, field_value)
     elif _is_field_type_a_primitive_array(field_type):
         field_value = field_value
     elif _is_field_type_an_array(field_type):
-        field_value = _convert_to_ros_array(
-            field_name, field_type, field_value, strict_mode, check_missing_fields, check_types, log_level
-        )
+        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields)
     else:
         field_value = convert_dictionary_to_ros_message(
-            field_type,
-            field_value,
-            strict_mode=strict_mode,
-            check_missing_fields=check_missing_fields,
-            check_types=check_types,
+            field_type, field_value, strict_mode=strict_mode, check_missing_fields=check_missing_fields
             log_level=log_level,
         )
     return field_value
@@ -254,20 +183,11 @@ def _convert_to_ros_primitive(field_type, field_value):
     return field_value
 
 
-def _convert_to_ros_array(
-    field_name,
-    field_type,
-    list_value,
-    strict_mode=True,
-    check_missing_fields=False,
-    check_types=True,
-    log_level='error',
-):
+def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, check_missing_fields=False):
     # use index to raise ValueError if '[' not present
     list_type = field_type[: field_type.index('[')]
     return [
-        _convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields, check_types, log_level)
-        for value in list_value
+        _convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields) for value in list_value
     ]
 
 
