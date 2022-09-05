@@ -601,6 +601,16 @@ class TestMessageConverter(unittest.TestCase):
             )
         self.assertEqual('''fields in dictionary missing from ROS message: "['data']"''', context.exception.args[0])
 
+    def test_dictionary_with_implicit_conversion(self):
+        from std_msgs.msg import Bool
+
+        dictionary = {"data": "should_be_a_bool"}
+        # bool('should_be_a_bool') == True (doesn't throw an error)
+        expected_message = Bool(data=True)
+        message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Bool', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(message, expected_message)
+
     def test_dictionary_with_wrong_type(self):
         dictionary = {"data": "should_be_a_float"}
         with self.assertRaises(ValueError) as context:
