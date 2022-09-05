@@ -930,12 +930,18 @@ class TestMessageConverter(unittest.TestCase):
             Byte: [np.int8],
             Char: [np.uint8],
         }
+
+        def typename(msg):
+            result = msg.__class__.__module__.split('.')
+            result.pop()
+            result.append(msg.__class__.__name__)
+            return '/'.join(result)
         for ros_type, valid_numpy_types in ros_to_numpy_type_map.items():
             for numpy_type in valid_numpy_types:
                 for value in numeric_limits[numpy_type]:
                     expected_message = ros_type(data=numpy_type(value))
                     dictionary = {'data': numpy_type(value)}
-                    message = message_converter.convert_dictionary_to_ros_message(expected_message._type, dictionary)
+                    message = message_converter.convert_dictionary_to_ros_message(typename(expected_message), dictionary)
                     expected_message = serialize_deserialize(expected_message)
                     self.assertEqual(message, expected_message)
 
@@ -944,7 +950,7 @@ class TestMessageConverter(unittest.TestCase):
                     with self.assertRaises(TypeError) as context:
                         expected_message = ros_type(data=wrong_numpy_type(value))
                         dictionary = {'data': wrong_numpy_type(value)}
-                        message_converter.convert_dictionary_to_ros_message(expected_message._type, dictionary)
+                        message_converter.convert_dictionary_to_ros_message(typename(expected_message), dictionary)
                     self.assertTrue("Field 'data' has wrong type" in context.exception.args[0])
 
     # -------- Tests for None: --------
