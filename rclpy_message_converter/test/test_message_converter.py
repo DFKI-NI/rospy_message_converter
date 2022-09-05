@@ -809,11 +809,6 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(message, expected_message)
 
-    def test_dictionary_with_invalid_message_fields(self):
-        self.assertRaises(
-            ValueError, message_converter.convert_dictionary_to_ros_message, 'std_msgs/msg/Empty', {'invalid_field': 1}
-        )
-
     def test_dictionary_with_empty_service(self):
         from std_srvs.srv import Empty
 
