@@ -15,7 +15,7 @@ setup(
     maintainer='Martin Günther',
     maintainer_email='martin.guenther@dfki.de',
     description='Converts between Python dictionaries and JSON to rclpy messages',
-    license='BSD',
+    license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [],

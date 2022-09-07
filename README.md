@@ -86,4 +86,4 @@ pre-commit install
 License
 -------
 
-Project is released under the BSD license.
+This project is released under the Apache 2.0 license.
