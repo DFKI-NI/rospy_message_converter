@@ -452,7 +452,7 @@ class TestMessageConverter(unittest.TestCase):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
         from base64 import b64encode
 
-        expected_message = Uint8Array3TestMessage(data=bytes(bytearray([97, 98, 99])))
+        expected_message = Uint8Array3TestMessage(data=[97, 98, 99])
         dictionary = {'data': b64encode(expected_message.data)}
         message = message_converter.convert_dictionary_to_ros_message(
             'rclpy_message_converter_msgs/msg/Uint8Array3TestMessage', dictionary
