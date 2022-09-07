@@ -34,49 +34,42 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-import logging
-import roslib.message
-import rospy
+import array
 import base64
-import sys
-import copy
-import collections
+from collections import OrderedDict
+from typing import Any, Dict
 
-python_list_types = [list, tuple]
-python_string_types = [str, bytes]
-python_int_types = [int]
-python_float_types = [float]
-
-ros_time_types = ['time', 'duration']
-ros_primitive_types = [
-    'bool',
-    'byte',
-    'char',
-    'int8',
-    'uint8',
-    'int16',
-    'uint16',
-    'int32',
-    'uint32',
-    'int64',
-    'uint64',
-    'float32',
-    'float64',
-    'string',
-]
-ros_header_types = ['Header', 'std_msgs/msg/Header', 'roslib/Header']
+import numpy as np
+import rosidl_parser.definition
+from rosidl_parser.definition import AbstractNestedType, NamespacedType, Array, UnboundedSequence, BasicType
+from rosidl_runtime_py.convert import get_message_slot_types
+from rosidl_runtime_py.import_message import import_message_from_namespaced_type
+from rosidl_runtime_py.utilities import get_message, get_service
 
 
 def convert_dictionary_to_ros_message(
-    message_type,
-    dictionary,
-    kind='message',
-    strict_mode=True,
-    check_missing_fields=False,
-    log_level='error',
-):
+    message_type: str,
+    dictionary: Dict[str, Any],
+    kind: str = 'message',
+    strict_mode: bool = True,
+    check_missing_fields: bool = False,
+) -> Any:
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
+
+    :param message_type: The type name of the ROS message to return.
+    :param dictionary: The values to set in the ROS message. The keys of the dictionary represent
+        fields of the message.
+    :param kind: Whether to create a message, service request or service response (valid values: "message",
+        "request", "response").
+    :param strict_mode: If strict_mode is set, an AttributeError will be raised if the input dictionary contains
+        extra fields that are not present in the ROS message.
+    :param check_missing_fields: If this parameter is set, a ValueError will be raised if the input dictionary
+        is missing an entry for some field of the ROS message.
+    :raises AttributeError: If the message does not have a field provided in the input dictionary.
+    :raises TypeError: If a message value does not match its field type.
+    :raises ValueError: If the input dictionary is incomplete (i.e., is missing an entry for some field
+        of the ROS message) or if an invalid value was passed to `kind`.
 
     Example:
         >>> msg_type = "std_msgs/msg/String"
@@ -91,109 +84,103 @@ def convert_dictionary_to_ros_message(
         std_srvs.srv.SetBool_Request(data=True)
     """
     if kind == 'message':
-        message_class = roslib.message.get_message_class(message_type)
+        message_class = get_message(message_type)
         message = message_class()
     elif kind == 'request':
-        service_class = roslib.message.get_service_class(message_type)
-        message = service_class._request_class()
+        service_class = get_service(message_type)
+        message = service_class.Request()
     elif kind == 'response':
-        service_class = roslib.message.get_service_class(message_type)
-        message = service_class._response_class()
+        service_class = get_service(message_type)
+        message = service_class.Response()
     else:
         raise ValueError('Unknown kind "%s".' % kind)
-    message_fields = dict(_get_message_fields(message))
 
-    remaining_message_fields = copy.deepcopy(message_fields)
-
-    if dictionary is None:
-        dictionary = {}
-    for field_name, field_value in dictionary.items():
-        if field_name in message_fields:
-            field_type = message_fields[field_name]
-            if field_value is not None:
-                field_value = _convert_to_ros_type(
-                    field_name, field_type, field_value, strict_mode, check_missing_fields
-                )
-                setattr(message, field_name, field_value)
-            del remaining_message_fields[field_name]
-        else:
-            error_message = 'ROS message type "{0}" has no field named "{1}"'.format(message_type, field_name)
-            if strict_mode:
-                raise ValueError(error_message)
-            else:
-                if log_level not in ["debug", "info", "warning", "error", "critical"]:
-                    log_level = "error"
-                logger = logging.getLogger('rosout')
-                log_func = getattr(logger, log_level)
-
-                log_func('{}! It will be ignored.'.format(error_message))
-
-    if check_missing_fields and remaining_message_fields:
-        error_message = 'Missing fields "{0}"'.format(remaining_message_fields)
-        raise ValueError(error_message)
-
+    set_message_fields(message, dictionary, strict_mode, check_missing_fields)
     return message
 
 
-def _convert_to_ros_type(field_name, field_type, field_value, strict_mode=True, check_missing_fields=False):
-    if _is_ros_binary_type(field_type):
-        field_value = _convert_to_ros_binary(field_type, field_value)
-    elif field_type in ros_time_types:
-        field_value = _convert_to_ros_time(field_type, field_value)
-    elif field_type in ros_primitive_types:
-        field_value = _convert_to_ros_primitive(field_type, field_value)
-    elif _is_field_type_a_primitive_array(field_type):
-        field_value = field_value
-    elif _is_field_type_an_array(field_type):
-        field_value = _convert_to_ros_array(field_name, field_type, field_value, strict_mode, check_missing_fields)
-    else:
-        field_value = convert_dictionary_to_ros_message(
-            field_type, field_value, strict_mode=strict_mode, check_missing_fields=check_missing_fields
-            log_level=log_level,
-        )
-    return field_value
-
-
-def _convert_to_ros_binary(field_type, field_value):
-    if type(field_value) in python_string_types:
-        # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the input,
-        # a binascii.Error will be raised.
-        binary_value_as_string = base64.b64decode(field_value, validate=True)
-    else:
-        binary_value_as_string = bytes(bytearray(field_value))
-    return binary_value_as_string
-
-
-def _convert_to_ros_time(field_type, field_value):
-    time = None
-
-    if field_type == 'time':
-        time = rospy.rostime.Time()
-    elif field_type == 'duration':
-        time = rospy.rostime.Duration()
-    if 'secs' in field_value and field_value['secs'] is not None:
-        setattr(time, 'secs', field_value['secs'])
-    if 'nsecs' in field_value and field_value['nsecs'] is not None:
-        setattr(time, 'nsecs', field_value['nsecs'])
-
-    return time
-
-
-def _convert_to_ros_primitive(field_type, field_value):
-    return field_value
-
-
-def _convert_to_ros_array(field_name, field_type, list_value, strict_mode=True, check_missing_fields=False):
-    # use index to raise ValueError if '[' not present
-    list_type = field_type[: field_type.index('[')]
-    return [
-        _convert_to_ros_type(field_name, list_type, value, strict_mode, check_missing_fields) for value in list_value
-    ]
-
-
-def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
+def set_message_fields(
+    msg: Any, values: Dict[str, Any], strict_mode: bool = True, check_missing_fields: bool = False
+) -> None:
     """
-    Takes in a ROS message and returns a Python dictionary.
+    Set the fields of a ROS message.
+
+    This method was copied and modified from rosidl_runtime_py.set_message.set_message_fields .
+
+    :param msg: The ROS message to populate.
+    :param values: The values to set in the ROS message. The keys of the dictionary represent
+        fields of the message.
+    :param strict_mode: If strict_mode is set, an AttributeError will be raised if the input dictionary contains
+        extra fields that are not present in the ROS message.
+    :param check_missing_fields: If this parameter is set, a ValueError will be raised if the input dictionary
+        is missing an entry for some field of the ROS message.
+    :raises AttributeError: If the message does not have a field provided in the input dictionary.
+    :raises TypeError: If a message value does not match its field type.
+    :raises ValueError: If the input dictionary is incomplete (i.e., is missing an entry for some field
+        of the ROS message).
+    """
+    if values is None:
+        values = {}
+    try:
+        items = values.items()
+    except AttributeError:
+        raise TypeError("Value '%s' is expected to be a dictionary but is a %s" % (values, type(values).__name__))
+
+    remaining_message_fields = dict(_get_message_fields(msg))
+
+    for field_name, field_value in items:
+        if field_value is None:
+            continue
+        try:
+            field = getattr(msg, field_name)
+            del remaining_message_fields[field_name]
+        except AttributeError as e:
+            if strict_mode:
+                raise e
+            else:
+                continue
+        field_type = type(field)
+        if field_type is array.array:
+            if isinstance(field_value, (str, bytes)):
+                # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the
+                # input, a binascii.Error will be raised.
+                field_value = list(base64.b64decode(field_value, validate=True))
+            value = field_type(field.typecode, field_value)
+        elif field_type is np.ndarray:
+            if isinstance(field_value, (str, bytes)):
+                # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the
+                # input, a binascii.Error will be raised.
+                field_value = list(base64.b64decode(field_value, validate=True))
+            value = np.array(field_value, dtype=field.dtype)
+        elif type(field_value) is field_type:
+            value = field_value
+        else:
+            try:
+                value = field_type(field_value)
+            except TypeError:
+                value = field_type()
+                set_message_fields(value, field_value, strict_mode, check_missing_fields)
+        rosidl_type = get_message_slot_types(msg)[field_name]
+        # Check if field is an array of ROS messages
+        if isinstance(rosidl_type, AbstractNestedType):
+            if isinstance(rosidl_type.value_type, NamespacedType):
+                field_elem_type = import_message_from_namespaced_type(rosidl_type.value_type)
+                for n in range(len(value)):
+                    submsg = field_elem_type()
+                    set_message_fields(submsg, value[n], strict_mode, check_missing_fields)
+                    value[n] = submsg
+        setattr(msg, field_name, value)
+
+    if check_missing_fields and remaining_message_fields:
+        error_message = 'fields in dictionary missing from ROS message: "{0}"'.format(
+            list(remaining_message_fields.keys())
+        )
+        raise ValueError(error_message)
+
+
+def convert_ros_message_to_dictionary(message: Any, binary_array_as_bytes: bool = True) -> OrderedDict:
+    """
+    Takes in a ROS message and returns an OrderedDict.
 
     Example:
         >>> import std_msgs.msg
@@ -201,91 +188,162 @@ def convert_ros_message_to_dictionary(message, binary_array_as_bytes=True):
         >>> convert_ros_message_to_dictionary(ros_message)
         OrderedDict([('data', 42)])
     """
-    dictionary = {}
-    message_fields = _get_message_fields(message)
-    for field_name, field_type in message_fields:
-        field_value = getattr(message, field_name)
-        dictionary[field_name] = _convert_from_ros_type(field_type, field_value, binary_array_as_bytes)
 
-    return dictionary
+    return message_to_ordereddict(message, binary_array_as_bytes=binary_array_as_bytes)
 
 
-def _convert_from_ros_type(field_type, field_value, binary_array_as_bytes=True):
-    if field_type in ros_primitive_types:
-        field_value = _convert_from_ros_primitive(field_type, field_value)
-    elif field_type in ros_time_types:
-        field_value = _convert_from_ros_time(field_type, field_value)
-    elif _is_ros_binary_type(field_type):
-        if binary_array_as_bytes:
-            field_value = _convert_from_ros_binary(field_type, field_value)
-        elif type(field_value) == str:
-            field_value = [ord(v) for v in field_value]
-        else:
-            field_value = list(field_value)
-    elif _is_field_type_a_primitive_array(field_type):
-        field_value = list(field_value)
-    elif _is_field_type_an_array(field_type):
-        field_value = _convert_from_ros_array(field_type, field_value, binary_array_as_bytes)
-    else:
-        field_value = convert_ros_message_to_dictionary(field_value, binary_array_as_bytes)
-
-    return field_value
-
-
-def _is_ros_binary_type(field_type):
-    """Checks if the field is a binary array one, fixed size or not
-
-    >>> _is_ros_binary_type("uint8")
-    False
-    >>> _is_ros_binary_type("uint8[]")
-    True
-    >>> _is_ros_binary_type("uint8[3]")
-    True
-    >>> _is_ros_binary_type("char")
-    False
-    >>> _is_ros_binary_type("char[]")
-    True
-    >>> _is_ros_binary_type("char[3]")
-    True
+def message_to_ordereddict(
+    msg: Any,
+    *,
+    binary_array_as_bytes: bool = True,
+    truncate_length: int = None,
+    no_arr: bool = False,
+    no_str: bool = False,
+) -> OrderedDict:
     """
-    return field_type.startswith('uint8[') or field_type.startswith('char[')
+    Convert a ROS message to an OrderedDict.
+
+    This method was copied and modified from rosidl_runtime_py.convert.message_to_ordereddict.
+
+    :param msg: The ROS message to convert.
+    :param truncate_length: Truncate values for all message fields to this length.
+        This does not truncate the list of fields (ie. the dictionary keys).
+    :param no_arr: Exclude array fields of the message.
+    :param no_str: Exclude string fields of the message.
+    :returns: An OrderedDict where the keys are the ROS message fields and the values are
+        set to the values of the input message.
+    """
+    d = OrderedDict()
+
+    # We rely on __slots__ retaining the order of the fields in the .msg file.
+    for field_name, field_type in zip(msg.__slots__, msg.SLOT_TYPES):
+        value = getattr(msg, field_name, None)
+
+        value = _convert_value(
+            value,
+            binary_array_as_bytes=binary_array_as_bytes,
+            field_type=field_type,
+            truncate_length=truncate_length,
+            no_arr=no_arr,
+            no_str=no_str,
+        )
+        # Remove leading underscore from field name
+        d[field_name[1:]] = value
+    return d
 
 
-def _convert_from_ros_binary(field_type, field_value):
-    field_value = base64.b64encode(field_value).decode('utf-8')
-    return field_value
+def _convert_value(
+    value, *, binary_array_as_bytes: bool = True, field_type=None, truncate_length=None, no_arr=False, no_str=False
+):
+    if isinstance(value, bytes):
+        if truncate_length is not None and len(value) > truncate_length:
+            value = bytearray(''.join([chr(c) for c in value[:truncate_length]]) + '...', 'utf-8')
+    elif isinstance(value, str):
+        if no_str is True:
+            value = '<string length: <{0}>>'.format(len(value))
+        elif truncate_length is not None and len(value) > truncate_length:
+            value = value[:truncate_length] + '...'
+    elif isinstance(value, (list, tuple, array.array, np.ndarray)):
+        # Since arrays and ndarrays can't contain mixed types convert to list
+        typename = tuple if isinstance(value, tuple) else list
+
+        if (
+            binary_array_as_bytes
+            and isinstance(field_type, (Array, UnboundedSequence))
+            and type(field_type.value_type) is BasicType
+            and field_type.value_type.typename == 'uint8'
+        ):
+            value = base64.b64encode(value).decode('utf-8')
+        elif no_arr is True and field_type is not None:
+            value = __abbreviate_array_info(value, field_type)
+        elif truncate_length is not None and len(value) > truncate_length:
+            # Truncate the sequence
+            value = value[:truncate_length]
+            # Truncate every item in the sequence
+            value = typename(
+                [
+                    _convert_value(
+                        v,
+                        binary_array_as_bytes=binary_array_as_bytes,
+                        truncate_length=truncate_length,
+                        no_arr=no_arr,
+                        no_str=no_str,
+                    )
+                    for v in value
+                ]
+                + ['...']
+            )
+        else:
+            # Convert every item in the list
+            value = typename(
+                [
+                    _convert_value(
+                        v,
+                        binary_array_as_bytes=binary_array_as_bytes,
+                        truncate_length=truncate_length,
+                        no_arr=no_arr,
+                        no_str=no_str,
+                    )
+                    for v in value
+                ]
+            )
+    elif isinstance(value, dict) or isinstance(value, OrderedDict):
+        # Convert each key and value in the mapping
+        new_value = {} if isinstance(value, dict) else OrderedDict()
+        for k, v in value.items():
+            # Don't truncate keys because that could result in key collisions and data loss
+            new_value[_convert_value(k)] = _convert_value(
+                v,
+                binary_array_as_bytes=binary_array_as_bytes,
+                truncate_length=truncate_length,
+                no_arr=no_arr,
+                no_str=no_str,
+            )
+        value = new_value
+    elif isinstance(value, np.number):
+        value = value.item()
+    elif not isinstance(value, (bool, float, int)):
+        # Assuming value is a message since it is neither a collection nor a primitive type
+        value = message_to_ordereddict(
+            value,
+            binary_array_as_bytes=binary_array_as_bytes,
+            truncate_length=truncate_length,
+            no_arr=no_arr,
+            no_str=no_str,
+        )
+    return value
 
 
-def _convert_from_ros_time(field_type, field_value):
-    field_value = {'secs': field_value.secs, 'nsecs': field_value.nsecs}
-    return field_value
+def __abbreviate_array_info(value, field_type):
+    value_type_name = __get_type_name(field_type.value_type)
+    if isinstance(field_type, rosidl_parser.definition.Array):
+        return '<array type: {0}[{1}]>'.format(value_type_name, field_type.size)
+    elif isinstance(field_type, rosidl_parser.definition.BoundedSequence):
+        return '<sequence type: {0}[{1}], length: {2}>'.format(value_type_name, field_type.maximum_size, len(value))
+    elif isinstance(field_type, rosidl_parser.definition.UnboundedSequence):
+        return '<sequence type: {0}, length: {1}>'.format(value_type_name, len(value))
+    return 'unknown'
 
 
-def _convert_from_ros_primitive(field_type, field_value):
-    return field_value
-
-
-def _convert_from_ros_array(field_type, field_value, binary_array_as_bytes=True):
-    # use index to raise ValueError if '[' not present
-    list_type = field_type[: field_type.index('[')]
-    return [_convert_from_ros_type(list_type, value, binary_array_as_bytes) for value in field_value]
+def __get_type_name(value_type):
+    if isinstance(value_type, rosidl_parser.definition.BasicType):
+        return value_type.typename
+    elif isinstance(value_type, rosidl_parser.definition.AbstractString):
+        return 'string'
+    elif isinstance(value_type, rosidl_parser.definition.AbstractWString):
+        return 'wstring'
+    elif isinstance(value_type, rosidl_parser.definition.NamedType):
+        return value_type.name
+    elif isinstance(value_type, rosidl_parser.definition.NamespacedType):
+        return '/'.join(value_type.namespaced_name())
+    else:
+        return 'unknown'
 
 
 def _get_message_fields(message):
-    return zip(message.__slots__, message._slot_types)
-
-
-def _is_field_type_an_array(field_type):
-    return field_type.find('[') >= 0
-
-
-def _is_field_type_a_primitive_array(field_type):
-    bracket_index = field_type.find('[')
-    if bracket_index < 0:
-        return False
-    else:
-        list_type = field_type[:bracket_index]
-        return list_type in ros_primitive_types
+    # Workaround due to new python API https://github.com/ros2/rosidl_python/issues/99
+    slots = [slot[1:] for slot in message.__slots__]  # remove leading underscore
+    return zip(slots, message.SLOT_TYPES)
 
 
 if __name__ == "__main__":

@@ -39,7 +39,7 @@ import json
 from rclpy_message_converter import message_converter
 
 
-def convert_json_to_ros_message(message_type, json_message, strict_mode=True, log_level='error'):
+def convert_json_to_ros_message(message_type, json_message, strict_mode=True):
     """
     Takes in the message type and a JSON-formatted string and returns a ROS
     message.
@@ -50,8 +50,6 @@ def convert_json_to_ros_message(message_type, json_message, strict_mode=True, lo
     :type  json_message: str
     :param strict_mode: If strict_mode is set, an exception will be thrown if the json message contains extra fields.
     :type  strict_mode: bool, optional
-    :param log_level: The log level to be used. Available levels: debug, info, warning, error, critical
-    :type  log_level: str, optional
     :return: A ROS message
     :rtype: class:`genpy.Message`
 
@@ -62,9 +60,7 @@ def convert_json_to_ros_message(message_type, json_message, strict_mode=True, lo
         std_msgs.msg.String(data='Hello, Robot')
     """
     dictionary = json.loads(json_message)
-    return message_converter.convert_dictionary_to_ros_message(
-        message_type, dictionary, strict_mode=strict_mode, log_level=log_level
-    )
+    return message_converter.convert_dictionary_to_ros_message(message_type, dictionary, strict_mode=strict_mode)
 
 
 def convert_ros_message_to_json(message, binary_array_as_bytes=True):
