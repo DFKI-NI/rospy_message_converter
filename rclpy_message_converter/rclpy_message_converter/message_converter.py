@@ -188,6 +188,11 @@ def message_to_ordereddict(
     This method was copied and modified from rosidl_runtime_py.convert.message_to_ordereddict.
 
     :param msg: The ROS message to convert.
+    :param binary_array_as_bytes: If this parameter is true, encode all variable-size `uint8[]` or fixed-size `uint8[n]`
+           fields using Base64 encoding. This saves a lot of space when converting large messages
+           (such as sensor_msgs/Image) to json format.
+           If this parameter is `False`, these fields will be converted to `array.array` (for variable-size fields) or
+           `numpy.ndarray` (for fixed-size fields) instead.
     :param truncate_length: Truncate values for all message fields to this length.
         This does not truncate the list of fields (ie. the dictionary keys).
     :param no_arr: Exclude array fields of the message.

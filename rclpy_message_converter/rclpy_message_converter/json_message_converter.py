@@ -50,9 +50,11 @@ def convert_ros_message_to_json(message, binary_array_as_bytes=True):
 
     :param message: A ROS message to convert
     :type  message: class:`genpy.Message`
-    :param binary_array_as_bytes: rospy treats `uint8[]` data as a `bytes`, which is the Python representation for byte
-           data. In Python 2, this is the same as `str`. If this parameter is `False`, all `uint8[]` fields will be
-           converted to `list(int)` instead.
+    :param binary_array_as_bytes: If this parameter is true, encode all variable-size `uint8[]` or fixed-size `uint8[n]`
+           fields using Base64 encoding. This saves a lot of space when converting large messages
+           (such as sensor_msgs/Image) to json format.
+           If this parameter is `False`, these fields will be converted to `array.array` (for variable-size fields) or
+           `numpy.ndarray` (for fixed-size fields) instead.
     :type  binary_array_as_bytes: bool, optional
     :return: A JSON-formatted string
     :rtype:  str
