@@ -44,18 +44,18 @@ def convert_json_to_ros_message(message_type, json_message, strict_mode=True):
     return message_converter.convert_dictionary_to_ros_message(message_type, dictionary, strict_mode=strict_mode)
 
 
-def convert_ros_message_to_json(message, binary_array_as_bytes=True):
+def convert_ros_message_to_json(message, base64_encoding=True):
     """
     Takes in a ROS message and returns a JSON-formatted string.
 
     :param message: A ROS message to convert
     :type  message: class:`genpy.Message`
-    :param binary_array_as_bytes: If this parameter is true, encode all variable-size `uint8[]` or fixed-size `uint8[n]`
+    :param base64_encoding: If this parameter is true, encode all variable-size `uint8[]` or fixed-size `uint8[n]`
            fields using Base64 encoding. This saves a lot of space when converting large messages
            (such as sensor_msgs/Image) to json format.
            If this parameter is `False`, these fields will be converted to `array.array` (for variable-size fields) or
            `numpy.ndarray` (for fixed-size fields) instead.
-    :type  binary_array_as_bytes: bool, optional
+    :type  base64_encoding: bool, optional
     :return: A JSON-formatted string
     :rtype:  str
 
@@ -65,7 +65,7 @@ def convert_ros_message_to_json(message, binary_array_as_bytes=True):
         >>> convert_ros_message_to_json(ros_message)
         '{"data": "Hello, Robot"}'
     """
-    dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes)
+    dictionary = message_converter.convert_ros_message_to_dictionary(message, base64_encoding)
     json_message = json.dumps(dictionary)
     return json_message
 

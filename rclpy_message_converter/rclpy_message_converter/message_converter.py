@@ -160,7 +160,7 @@ def set_message_fields(
         raise ValueError(error_message)
 
 
-def convert_ros_message_to_dictionary(message: Any, binary_array_as_bytes: bool = True) -> OrderedDict:
+def convert_ros_message_to_dictionary(message: Any, base64_encoding: bool = True) -> OrderedDict:
     """
     Takes in a ROS message and returns an OrderedDict.
 
@@ -171,13 +171,13 @@ def convert_ros_message_to_dictionary(message: Any, binary_array_as_bytes: bool 
         OrderedDict([('data', 42)])
     """
 
-    return message_to_ordereddict(message, binary_array_as_bytes=binary_array_as_bytes)
+    return message_to_ordereddict(message, base64_encoding=base64_encoding)
 
 
 def message_to_ordereddict(
     msg: Any,
     *,
-    binary_array_as_bytes: bool = True,
+    base64_encoding: bool = True,
     truncate_length: int = None,
     no_arr: bool = False,
     no_str: bool = False,
@@ -188,7 +188,7 @@ def message_to_ordereddict(
     This method was copied and modified from rosidl_runtime_py.convert.message_to_ordereddict.
 
     :param msg: The ROS message to convert.
-    :param binary_array_as_bytes: If this parameter is true, encode all variable-size `uint8[]` or fixed-size `uint8[n]`
+    :param base64_encoding: If this parameter is true, encode all variable-size `uint8[]` or fixed-size `uint8[n]`
            fields using Base64 encoding. This saves a lot of space when converting large messages
            (such as sensor_msgs/Image) to json format.
            If this parameter is `False`, these fields will be converted to `array.array` (for variable-size fields) or
@@ -208,7 +208,7 @@ def message_to_ordereddict(
 
         value = _convert_value(
             value,
-            binary_array_as_bytes=binary_array_as_bytes,
+            base64_encoding=base64_encoding,
             field_type=field_type,
             truncate_length=truncate_length,
             no_arr=no_arr,
@@ -220,7 +220,7 @@ def message_to_ordereddict(
 
 
 def _convert_value(
-    value, *, binary_array_as_bytes: bool = True, field_type=None, truncate_length=None, no_arr=False, no_str=False
+    value, *, base64_encoding: bool = True, field_type=None, truncate_length=None, no_arr=False, no_str=False
 ):
     if isinstance(value, bytes):
         if truncate_length is not None and len(value) > truncate_length:
@@ -235,7 +235,7 @@ def _convert_value(
         typename = tuple if isinstance(value, tuple) else list
 
         if (
-            binary_array_as_bytes
+            base64_encoding
             and isinstance(field_type, (Array, UnboundedSequence))
             and type(field_type.value_type) is BasicType
             and field_type.value_type.typename == 'uint8'
@@ -251,7 +251,7 @@ def _convert_value(
                 [
                     _convert_value(
                         v,
-                        binary_array_as_bytes=binary_array_as_bytes,
+                        base64_encoding=base64_encoding,
                         truncate_length=truncate_length,
                         no_arr=no_arr,
                         no_str=no_str,
@@ -266,7 +266,7 @@ def _convert_value(
                 [
                     _convert_value(
                         v,
-                        binary_array_as_bytes=binary_array_as_bytes,
+                        base64_encoding=base64_encoding,
                         truncate_length=truncate_length,
                         no_arr=no_arr,
                         no_str=no_str,
@@ -281,7 +281,7 @@ def _convert_value(
             # Don't truncate keys because that could result in key collisions and data loss
             new_value[_convert_value(k)] = _convert_value(
                 v,
-                binary_array_as_bytes=binary_array_as_bytes,
+                base64_encoding=base64_encoding,
                 truncate_length=truncate_length,
                 no_arr=no_arr,
                 no_str=no_str,
@@ -293,7 +293,7 @@ def _convert_value(
         # Assuming value is a message since it is neither a collection nor a primitive type
         value = message_to_ordereddict(
             value,
-            binary_array_as_bytes=binary_array_as_bytes,
+            base64_encoding=base64_encoding,
             truncate_length=truncate_length,
             no_arr=no_arr,
             no_str=no_str,

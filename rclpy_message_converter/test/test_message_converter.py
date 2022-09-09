@@ -160,7 +160,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_data = [97, 98, 99]
         message = Uint8Array3TestMessage(data=expected_data)
         message = serialize_deserialize(message)
-        dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes=False)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message, base64_encoding=False)
         self.assertEqual(expected_data, dictionary["data"])
 
     def test_ros_message_with_nested_uint8_array_binary_array_as_array(self):
@@ -169,7 +169,7 @@ class TestMessageConverter(unittest.TestCase):
         expected_data = [97, 98, 99]
         message = NestedUint8ArrayTestMessage(arrays=[Uint8ArrayTestMessage(data=expected_data)])
         message = serialize_deserialize(message)
-        dictionary = message_converter.convert_ros_message_to_dictionary(message, binary_array_as_bytes=False)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message, base64_encoding=False)
         self.assertEqual(expected_data, dictionary["arrays"][0]["data"])
 
     def test_ros_message_with_nested_uint8_array(self):
