@@ -1,6 +1,43 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Initial release into ROS2
+* Convert repo to ROS2
+* Rename binary_array_as_bytes to base64_encoding
+* Switch to Apache 2.0 license
+  This is necessary because the new ROS2 code contains code that was
+  copied and modified from rosidl_runtime_py, which is licensed under
+  Apache 2.0. Switching from BSD to Apache 2.0 should be okay, because
+  Apache 2.0 is the more restrictive license.
+* Remove support for checking types
+  In ROS2, it is no longer possible to set the data field of ROS numeric
+  types (Float32, Float64, int, ...) to numpy types, because the setter
+  checks that it's a python primitive type.
+* Remove support for time 'now'
+  Implementing this properly requires a node handle and is out of scope
+  for this library.
+* Remove python2 support
+* Tests: Change Uint8Array3TestMessage from bytes to list
+  Creating from a bytes type is not supported in ROS2.
+* Tests: Switch assertEqual order of arguments
+  Expected is first, actual second (this way, the log output on failing
+  tests is correct).
+* Tests: Remove test_dictionary_with_invalid_message_fields
+  This is the same as test_dictionary_with_empty_additional_args_strict_mode, so it can be safely removed.
+* Tests: Add workaround for typename
+  The field _type does not exist in ROS2 any more.
+* Tests: Add test_dictionary_with_implicit_conversion
+  The new version (based on set_message_fields) implicitly converts
+  strings to bool.
+* Tests: Change expected exceptions
+  This makes the exceptions thrown by rclpy_message_converter the same as
+  rosidl_runtime_py.set_message.set_message_fields().
+  Also change test_dictionary_with_wrong_type to use floats, because
+  bool('should_be_a_bool') == True (doesn't throw an error).
+* Contributors: Martin Günther, relffok
+
 0.5.6 (2021-03-01)
 ------------------
 * Propagate strict_mode, check_missing_fields in _convert_to_ros_type
