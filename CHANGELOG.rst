@@ -1,6 +1,21 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* Fix flake8 errors
+* Re-format code using black
+* package.xml: Add missing build_export_depend
+* Fix EOF and trailing whitespace
+* Add pre-commit config
+* README: Add note about branches
+* pass down log_level to helper functions (`#60 <https://github.com/uos/rospy_message_converter/issues/60>`_)
+* Declare file encoding
+  This is necessary on ROS Melodic (Python2), because I have added a
+  non-ASCII character (u umlaut) in my last commit.
+* Add LICENSE file and license headers
+* Contributors: Martin Günther, Yuri Rocha
+
 0.5.8 (2022-03-03)
 ------------------
 * add option to change log level (`#58 <https://github.com/uos/rospy_message_converter/issues/58>`_)
