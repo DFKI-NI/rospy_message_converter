@@ -11,6 +11,26 @@ ROS 1 and ROS 2 branches
 ROS 1 users should use the `master` branch. ROS 2 users should use the appropriate
 branch for their distro (`foxy`/`galactic`/`humble`/`rolling`/...).
 
+Note to ROS 2 users
+-------------------
+
+Most ROS 2 users probably *do not need* this package. This package was originally
+developed for ROS 1. In ROS 2, most of the functionality is already built in.
+Specifically, check out
+
+* [rosidl_runtime_py.set_message.set_message_fields()](https://github.com/ros2/rosidl_runtime_py/blob/1979f566c3b446ddbc5c3fb6896e1f03ccbc6a27/rosidl_runtime_py/set_message.py#L28-L37)
+  for converting a Python dictionary to a ROS message, and
+* [rosidl_runtime_py.convert.message_to_orderreddict](https://github.com/ros2/rosidl_runtime_py/blob/1979f566c3b446ddbc5c3fb6896e1f03ccbc6a27/rosidl_runtime_py/convert.py#L159-L176)
+  for converting a ROS message to a Python dictionary.
+
+The `rclpy_message_converter` mainly adds the functionality to encode all
+variable-size `uint8[]` or fixed-size `uint8[n]` fields using Base64 encoding
+when the parameter `base64_encoding` is set.
+This saves a lot of space when converting large messages
+(such as `sensor_msgs/Image`) to JSON format. Also, encoding/decoding of Base64
+strings is required by some packages (such as [mir_robot](https://github.com/dfki-ric/mir_robot))
+that were originally developed in ROS1.
+
 Usage
 -----
 
