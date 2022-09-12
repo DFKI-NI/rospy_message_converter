@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+2.0.0 (2022-09-12)
+------------------
 * Initial release into ROS2
 * Convert repo to ROS2
 * Rename binary_array_as_bytes to base64_encoding
