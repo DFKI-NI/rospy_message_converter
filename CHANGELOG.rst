@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+0.5.9 (2022-09-12)
+------------------
 * Fix flake8 errors
 * Re-format code using black
 * package.xml: Add missing build_export_depend
