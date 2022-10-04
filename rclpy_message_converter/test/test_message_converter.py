@@ -267,6 +267,51 @@ class TestMessageConverter(unittest.TestCase):
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
         self.assertEqual(expected_dictionary, dictionary)
 
+    def test_ros_message_with_tfmessage(self):
+        from tf2_msgs.msg import TFMessage
+        from geometry_msgs.msg import TransformStamped
+
+        t = TransformStamped()
+        t.header.stamp.sec = 12345
+        t.header.stamp.nanosec = 67890
+        t.header.frame_id = 'dummy_frame_id'
+        t.child_frame_id = 'dummy_child_frame_id'
+        t.transform.translation.x = 1.0
+        t.transform.translation.y = 2.0
+        t.transform.translation.z = 3.0
+        t.transform.rotation.x = -0.5
+        t.transform.rotation.y = 0.5
+        t.transform.rotation.z = -0.5
+        t.transform.rotation.w = 0.5
+        expected_dictionary = {
+            'transforms': [
+                {
+                    'header': {
+                        'stamp': {'sec': t.header.stamp.sec, 'nanosec': t.header.stamp.nanosec},
+                        'frame_id': t.header.frame_id,
+                    },
+                    'child_frame_id': t.child_frame_id,
+                    'transform': {
+                        'translation': {
+                            'x': t.transform.translation.x,
+                            'y': t.transform.translation.y,
+                            'z': t.transform.translation.z,
+                        },
+                        'rotation': {
+                            'x': t.transform.rotation.x,
+                            'y': t.transform.rotation.y,
+                            'z': t.transform.rotation.z,
+                            'w': t.transform.rotation.w,
+                        },
+                    },
+                }
+            ]
+        }
+        message = TFMessage(transforms=[t])
+        message = serialize_deserialize(message)
+        dictionary = message_converter.convert_ros_message_to_dictionary(message)
+        self.assertEqual(expected_dictionary, dictionary)
+
     def test_ros_message_with_child_message(self):
         from std_msgs.msg import Float64MultiArray, MultiArrayLayout, MultiArrayDimension
 
@@ -726,6 +771,51 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = Time(sec=now_time.sec, nanosec=now_time.nanosec)
         dictionary = {'sec': now_time.sec, 'nanosec': now_time.nanosec}
         message = message_converter.convert_dictionary_to_ros_message('builtin_interfaces/msg/Time', dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(expected_message, message)
+
+    def test_dictionary_with_tfmessage(self):
+        from tf2_msgs.msg import TFMessage
+        from geometry_msgs.msg import TransformStamped
+
+        t = TransformStamped()
+        t.header.stamp.sec = 12345
+        t.header.stamp.nanosec = 67890
+        t.header.frame_id = 'dummy_frame_id'
+        t.child_frame_id = 'dummy_child_frame_id'
+        t.transform.translation.x = 1.0
+        t.transform.translation.y = 2.0
+        t.transform.translation.z = 3.0
+        t.transform.rotation.x = -0.5
+        t.transform.rotation.y = 0.5
+        t.transform.rotation.z = -0.5
+        t.transform.rotation.w = 0.5
+        expected_message = TFMessage(transforms=[t])
+        dictionary = {
+            'transforms': [
+                {
+                    'header': {
+                        'stamp': {'sec': t.header.stamp.sec, 'nanosec': t.header.stamp.nanosec},
+                        'frame_id': t.header.frame_id,
+                    },
+                    'child_frame_id': t.child_frame_id,
+                    'transform': {
+                        'translation': {
+                            'x': t.transform.translation.x,
+                            'y': t.transform.translation.y,
+                            'z': t.transform.translation.z,
+                        },
+                        'rotation': {
+                            'x': t.transform.rotation.x,
+                            'y': t.transform.rotation.y,
+                            'z': t.transform.rotation.z,
+                            'w': t.transform.rotation.w,
+                        },
+                    },
+                }
+            ]
+        }
+        message = message_converter.convert_dictionary_to_ros_message('tf2_msgs/msg/TFMessage', dictionary)
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(expected_message, message)
 
