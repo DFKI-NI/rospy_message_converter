@@ -33,7 +33,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = String(data='Hello')
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertEqual(returned_json, expected_json)
+        self.assertEqual(expected_json, returned_json)
 
     def test_ros_message_with_string_unicode(self):
         from std_msgs.msg import String
@@ -42,7 +42,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = String(data=u'Hello \u00dcnicode')
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertEqual(returned_json, expected_json)
+        self.assertEqual(expected_json, returned_json)
 
     def test_ros_message_with_header(self):
         from std_msgs.msg import Header
@@ -57,7 +57,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = Header(stamp=now_time, frame_id='my_frame')
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertTrue(returned_json == expected_json1 or returned_json == expected_json2)
+        self.assertTrue(expected_json1 == returned_json or expected_json2 == returned_json)
 
     def test_ros_message_with_tfmessage(self):
         from tf2_msgs.msg import TFMessage
@@ -105,7 +105,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         # strip whitespace:
         expected_json = ''.join(expected_json.split())
         returned_json = ''.join((returned_json.split()))
-        self.assertEqual(returned_json, expected_json)
+        self.assertEqual(expected_json, returned_json)
 
     def test_ros_message_with_uint8_array(self):
         from rclpy_message_converter_msgs.msg import Uint8ArrayTestMessage
@@ -115,7 +115,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = Uint8ArrayTestMessage(data=input_data)
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertEqual(returned_json, expected_json)
+        self.assertEqual(expected_json, returned_json)
 
     def test_ros_message_with_3uint8_array(self):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
@@ -125,7 +125,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         message = Uint8Array3TestMessage(data=input_data)
         message = serialize_deserialize(message)
         returned_json = json_message_converter.convert_ros_message_to_json(message)
-        self.assertEqual(returned_json, expected_json)
+        self.assertEqual(expected_json, returned_json)
 
     def test_json_with_string(self):
         from std_msgs.msg import String
@@ -134,7 +134,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         json_str = '{"data": "Hello"}'
         message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/String', json_str)
         expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
+        self.assertEqual(expected_message, message)
 
     def test_json_with_string_unicode(self):
         from std_msgs.msg import String
@@ -143,7 +143,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         json_str = '{"data": "Hello \\u00dcnicode"}'
         message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/String', json_str)
         expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
+        self.assertEqual(expected_message, message)
 
     def test_json_with_header(self):
         from std_msgs.msg import Header
@@ -158,7 +158,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         )
         message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/Header', json_str)
         expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
+        self.assertEqual(expected_message, message)
 
     def test_json_with_tfmessage(self):
         from tf2_msgs.msg import TFMessage
@@ -203,7 +203,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         }}'''
         message = json_message_converter.convert_json_to_ros_message('tf2_msgs/msg/TFMessage', json_str)
         expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
+        self.assertEqual(expected_message, message)
 
     def test_json_with_string_null(self):
         from std_msgs.msg import String
@@ -212,7 +212,7 @@ class TestJsonMessageConverter(unittest.TestCase):
         json_str = '{"data": null}'
         message = json_message_converter.convert_json_to_ros_message('std_msgs/msg/String', json_str)
         expected_message = serialize_deserialize(expected_message)
-        self.assertEqual(message, expected_message)
+        self.assertEqual(expected_message, message)
 
     def test_json_with_invalid_message_fields(self):
         self.assertRaises(
