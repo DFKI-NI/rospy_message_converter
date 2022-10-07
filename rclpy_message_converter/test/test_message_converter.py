@@ -391,6 +391,15 @@ class TestMessageConverter(unittest.TestCase):
         expected_message = serialize_deserialize(expected_message)
         self.assertEqual(expected_message, message)
 
+    def test_dictionary_as_class_with_array(self):
+        from rclpy_message_converter_msgs.msg import TestArray
+
+        expected_message = TestArray(data=[1.1, 2.2, 3.3, 4.4])
+        dictionary = {'data': expected_message.data}
+        message = message_converter.convert_dictionary_to_ros_message(TestArray, dictionary)
+        expected_message = serialize_deserialize(expected_message)
+        self.assertEqual(expected_message, message)
+
     def test_dictionary_with_uint8_array_bytes(self):
         """
         rospy treats uint8[] data as `bytes`, which is the Python representation for byte data. In Python 2, this is

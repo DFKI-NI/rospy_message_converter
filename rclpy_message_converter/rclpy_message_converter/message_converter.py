@@ -19,7 +19,7 @@
 import array
 import base64
 from collections import OrderedDict
-from typing import Any, Dict
+from typing import Any, Dict, Text
 
 import numpy as np
 import rosidl_parser.definition
@@ -30,7 +30,7 @@ from rosidl_runtime_py.utilities import get_message, get_service
 
 
 def convert_dictionary_to_ros_message(
-    message_type: str,
+    message_type: Any,
     dictionary: Dict[str, Any],
     kind: str = 'message',
     strict_mode: bool = True,
@@ -39,7 +39,7 @@ def convert_dictionary_to_ros_message(
     """
     Takes in the message type and a Python dictionary and returns a ROS message.
 
-    :param message_type: The type name of the ROS message to return.
+    :param message_type: Either the type name of the ROS message to return (as str), or the message class.
     :param dictionary: The values to set in the ROS message. The keys of the dictionary represent
         fields of the message.
     :param kind: Whether to create a message, service request or service response (valid values: "message",
@@ -59,23 +59,34 @@ def convert_dictionary_to_ros_message(
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg)
         std_msgs.msg.String(data='Hello, Robot')
 
+        >>> import std_msgs.msg
+        >>> msg_type = std_msgs.msg.String
+        >>> dict_msg = { "data": "Hello, Robot" }
+        >>> convert_dictionary_to_ros_message(msg_type, dict_msg)
+        std_msgs.msg.String(data='Hello, Robot')
+
         >>> msg_type = "std_srvs/srv/SetBool"
         >>> dict_msg = { "data": True }
         >>> kind = "request"
         >>> convert_dictionary_to_ros_message(msg_type, dict_msg, kind)
         std_srvs.srv.SetBool_Request(data=True)
     """
-    if kind == 'message':
-        message_class = get_message(message_type)
-        message = message_class()
-    elif kind == 'request':
-        service_class = get_service(message_type)
-        message = service_class.Request()
-    elif kind == 'response':
-        service_class = get_service(message_type)
-        message = service_class.Response()
+    if isinstance(message_type, Text):
+        # message_type = type name as string (e.g., "std_msgs/msg/String")
+        if kind == 'message':
+            message_class = get_message(message_type)
+            message = message_class()
+        elif kind == 'request':
+            service_class = get_service(message_type)
+            message = service_class.Request()
+        elif kind == 'response':
+            service_class = get_service(message_type)
+            message = service_class.Response()
+        else:
+            raise ValueError('Unknown kind "%s".' % kind)
     else:
-        raise ValueError('Unknown kind "%s".' % kind)
+        # message_type = message class (e.g., std_msgs.msg.String)
+        message = message_type()
 
     set_message_fields(message, dictionary, strict_mode, check_missing_fields)
     return message
