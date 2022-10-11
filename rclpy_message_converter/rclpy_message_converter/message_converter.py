@@ -133,7 +133,9 @@ def set_message_fields(
             else:
                 continue
         field_type = type(field)
-        if field_type is array.array:
+        if type(field_value) is field_type:
+            value = field_value
+        elif field_type is array.array:
             if isinstance(field_value, (str, bytes)):
                 # If field_value is not properly base64 encoded and there are non-base64-alphabet characters in the
                 # input, a binascii.Error will be raised.
@@ -145,8 +147,6 @@ def set_message_fields(
                 # input, a binascii.Error will be raised.
                 field_value = list(base64.b64decode(field_value, validate=True))
             value = np.array(field_value, dtype=field.dtype)
-        elif type(field_value) is field_type:
-            value = field_value
         else:
             try:
                 value = field_type(field_value)
@@ -158,10 +158,13 @@ def set_message_fields(
         if isinstance(rosidl_type, AbstractNestedType):
             if isinstance(rosidl_type.value_type, NamespacedType):
                 field_elem_type = import_message_from_namespaced_type(rosidl_type.value_type)
-                for n in range(len(value)):
-                    submsg = field_elem_type()
-                    set_message_fields(submsg, value[n], strict_mode, check_missing_fields)
-                    value[n] = submsg
+                for n in range(len(field_value)):
+                    if type(field_value[n]) is field_elem_type:
+                        value[n] = field_value[n]
+                    else:
+                        submsg = field_elem_type()
+                        set_message_fields(submsg, field_value[n], strict_mode, check_missing_fields)
+                        value[n] = submsg
         setattr(msg, field_name, value)
 
     if check_missing_fields and remaining_message_fields:
