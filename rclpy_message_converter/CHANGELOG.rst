@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+2.0.1 (2022-11-14)
+------------------
 * Allow message_type as class in convert_dictionary_to_ros_message
 * Tests: Switch assertEqual order of arguments in test_json
 * Tests: Add tests for tf2_msgs.msg.TFMessage
