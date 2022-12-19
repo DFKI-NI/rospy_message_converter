@@ -88,10 +88,10 @@ License
 
 Project is released under the BSD license.
 
-Travis - Continuous Integration
--------------------------------
+GitHub actions - Continuous Integration
+---------------------------------------
 
-[![Build Status](https://travis-ci.org/uos/rospy_message_converter.svg)](https://travis-ci.org/uos/rospy_message_converter)
+[![Build Status](https://github.com/DFKI-NI/rospy_message_converter/actions/workflows/github-actions.yml/badge.svg)](https://github.com/DFKI-NI/rospy_message_converter/actions/workflows/github-actions.yml/)
 
 
 ROS Buildfarm
