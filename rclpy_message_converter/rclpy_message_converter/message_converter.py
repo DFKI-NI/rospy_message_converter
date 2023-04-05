@@ -228,8 +228,7 @@ def message_to_ordereddict(
             no_arr=no_arr,
             no_str=no_str,
         )
-        # Remove leading underscore from field name
-        d[field_name[1:]] = value
+        d[field_name] = value
     return d
 
 
