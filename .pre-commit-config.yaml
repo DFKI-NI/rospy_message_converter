@@ -42,14 +42,3 @@ repos:
     rev: 5.0.4
     hooks:
     - id: flake8
-
-  - repo: local
-    hooks:
-      - id: catkin_lint
-        name: catkin_lint
-        description: Check package.xml and cmake files
-        entry: catkin_lint .
-        language: system
-        always_run: true
-        pass_filenames: false
-        args: [ "--strict" ]
