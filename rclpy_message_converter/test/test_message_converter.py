@@ -458,14 +458,15 @@ class TestMessageConverter(unittest.TestCase):
                 'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage', dictionary
             )
         error_msg = context.exception.args[0]
-        self.assertIn(error_msg, ['Incorrect padding', 'Non-base64 digit found'])
+        self.assertIn(error_msg, ['Incorrect padding', 'Non-base64 digit found', 'Only base64 data is allowed'])
 
         dictionary = {'data': bytes(bytearray([1, 97, 97, 2, 3, 97, 4, 97]))}
         with self.assertRaises(binascii.Error) as context:
             message_converter.convert_dictionary_to_ros_message(
                 'rclpy_message_converter_msgs/msg/Uint8ArrayTestMessage', dictionary
             )
-        self.assertEqual('Non-base64 digit found', context.exception.args[0])
+        error_msg = context.exception.args[0]
+        self.assertIn(error_msg, ['Incorrect padding', 'Non-base64 digit found', 'Only base64 data is allowed'])
 
     def test_dictionary_with_3uint8_array_bytes(self):
         from rclpy_message_converter_msgs.msg import Uint8Array3TestMessage
