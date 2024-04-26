@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Forthcoming
+-----------
+* tests: Adapt to renamed exception message
+* Move repo to DFKI-NI
+* Modifies the use of slots for get_fields_and_field_types method (`#64 <https://github.com/DFKI-NI/rospy_message_converter/issues/64>`_)
+* Contributors: Eloy Briceno, Martin Günther
+
 2.0.1 (2022-11-14)
 ------------------
 * Allow message_type as class in convert_dictionary_to_ros_message

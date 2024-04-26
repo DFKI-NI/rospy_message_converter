@@ -2,6 +2,11 @@
 Changelog for package rclpy_message_converter_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Move repo to DFKI-NI
+* Contributors: Martin Günther
+
 2.0.1 (2022-11-14)
 ------------------
 
