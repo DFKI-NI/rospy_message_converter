@@ -1,8 +1,8 @@
 Change Log
 ==========
 
-Forthcoming
------------
+2.0.2 (2024-04-26)
+------------------
 * tests: Adapt to renamed exception message
 * Move repo to DFKI-NI
 * Modifies the use of slots for get_fields_and_field_types method (`#64 <https://github.com/DFKI-NI/rospy_message_converter/issues/64>`_)
