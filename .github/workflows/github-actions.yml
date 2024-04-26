@@ -16,7 +16,7 @@ jobs:
     - name: Install pip dependencies
       run: pip install pre-commit
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         path: src/rospy_message_converter
     - name: Use rosdep to install remaining dependencies
