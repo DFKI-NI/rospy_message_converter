@@ -86,7 +86,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_ros_message_with_float32(self):
         from std_msgs.msg import Float32
 
-        expected_dictionary = {'data': struct.unpack('<f', b'\x7F\x7F\xFF\xFD')[0]}
+        expected_dictionary = {'data': struct.unpack('<f', b'\x7f\x7f\xff\xfd')[0]}
         message = Float32(data=expected_dictionary['data'])
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
@@ -95,7 +95,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_ros_message_with_float64(self):
         from std_msgs.msg import Float64
 
-        expected_dictionary = {'data': struct.unpack('<d', b'\x7F\xEF\xFF\xFF\xFF\xFF\xFF\xFD')[0]}
+        expected_dictionary = {'data': struct.unpack('<d', b'\x7f\xef\xff\xff\xff\xff\xff\xfd')[0]}
         message = Float64(data=expected_dictionary['data'])
         message = serialize_deserialize(message)
         dictionary = message_converter.convert_ros_message_to_dictionary(message)
@@ -636,7 +636,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_float32(self):
         from std_msgs.msg import Float32
 
-        expected_message = Float32(data=struct.unpack('<f', b'\x7F\x7F\xFF\xFD')[0])
+        expected_message = Float32(data=struct.unpack('<f', b'\x7f\x7f\xff\xfd')[0])
         dictionary = {'data': expected_message.data}
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Float32', dictionary)
         expected_message = serialize_deserialize(expected_message)
@@ -645,7 +645,7 @@ class TestMessageConverter(unittest.TestCase):
     def test_dictionary_with_float64(self):
         from std_msgs.msg import Float64
 
-        expected_message = Float64(data=struct.unpack('<d', b'\x7F\xEF\xFF\xFF\xFF\xFF\xFF\xFD')[0])
+        expected_message = Float64(data=struct.unpack('<d', b'\x7f\xef\xff\xff\xff\xff\xff\xfd')[0])
         dictionary = {'data': expected_message.data}
         message = message_converter.convert_dictionary_to_ros_message('std_msgs/msg/Float64', dictionary)
         expected_message = serialize_deserialize(expected_message)
